@@ -7,6 +7,7 @@ import sys
 
 SIZE_X, SIZE_Y = 80, 40
 
+
 class World:
     def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
         if start == "gliders":
@@ -21,11 +22,10 @@ class World:
         else:
             self.random_world()
 
-        self.mode = mode 
+        self.mode = mode
         if mode == "curses":
             self.screen = curses.initscr()
             self.screen.border(0)
-
 
     def gliders(self):
         """ Set the world to Gosper Glider Gun"""
@@ -59,8 +59,8 @@ class World:
         self.world = world
 
     def random_world(self):
-        self.world = [[random.randint(0,1) for x in range(SIZE_X)] for y in range(SIZE_Y)]
-
+        self.world = [[random.randint(0, 1)
+                       for x in range(SIZE_X)] for y in range(SIZE_Y)]
 
     def _calculate_neighbours(self, position):
         """Return the number of neighbours of the cell in position position"""
@@ -177,11 +177,12 @@ class World:
         for i in range(steps):
             self.update()
             self.print_world()
+            time.sleep(0.02)
 
 
 def main():
     """ Main function """
-    world = World(start="random", mode="curses")
+    world = World(start="gliders", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
     world.animate(100)
     world.kill_screen()
 
