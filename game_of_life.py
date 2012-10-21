@@ -12,10 +12,10 @@ class World:
     def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
         if start == "gliders":
             if size_x < 40:
-                print("needs at least 40 pixels wide for gliders")
+                print("Needs at least 40 pixels wide for gliders")
                 sys.exit(1)
             elif size_y < 10:
-                print("needs at least 10 pixels long for gliders")
+                print("Needs at least 10 pixels long for gliders")
                 sys.exit(1)
             else:
                 self.gliders()
@@ -172,18 +172,18 @@ class World:
         if self.mode == "curses":
             curses.endwin()
 
-    def animate(self, steps):
+    def animate(self, steps, dt=0.05):
         """ Update and print the screen 'step' times"""
         for i in range(steps):
             self.update()
             self.print_world()
-            time.sleep(0.02)
+            time.sleep(dt)
 
 
 def main():
     """ Main function """
     world = World(start="gliders", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
-    world.animate(100)
+    world.animate(200, 0.05)
     world.kill_screen()
 
 
