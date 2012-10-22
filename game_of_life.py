@@ -3,9 +3,15 @@
 import curses
 import time
 import random
+import signal
 import sys
 
 SIZE_X, SIZE_Y = 80, 40
+
+def signal_handler(signal, frame):
+    """ Make Ctrl-c exit close curses window """
+    curses.endwin()
+    sys.exit(0)
 
 
 class World:
@@ -182,13 +188,11 @@ class World:
 
 def main():
     """ Main function """
-    world = World(start="gliders", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
+    world = World(start="random", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
     world.animate(200, 0.05)
     world.kill_screen()
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except:
-        curses.endwin()
+    signal.signal(signal.SIGINT, signal_handler)
+    main()
