@@ -188,9 +188,29 @@ class World:
 
 def main():
     """ Main function """
+    run = True
     world = World(start="random", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
-    world.animate(200, 0.05)
+    run_animation(world, 100, 0.1)
+    run = again(world)
+    while run:
+        run_animation(world, 100, 0.1)
+        run = again(world)
     world.kill_screen()
+
+
+def run_animation(world, steps, dt):
+    """ Run animation steps times """
+    world.animate(steps, dt)
+
+
+def again(world):
+    """ Prompt user for continued animation """
+    world.screen.addstr(SIZE_Y//2, SIZE_X//2, "Continue? y/n")
+    answer = world.screen.getch()
+    if answer == 121 or answer == 89:
+        return True
+    else:
+        return False
 
 
 if __name__ == "__main__":
