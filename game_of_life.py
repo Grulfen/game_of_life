@@ -5,8 +5,12 @@ import time
 import random
 import signal
 import sys
+import logging
 
 SIZE_X, SIZE_Y = 80, 40
+
+logging.basicConfig(filename="life.log", filemode="w", level=logging.INFO)
+
 
 def signal_handler(signal, frame):
     """ Make Ctrl-c exit close curses window """
@@ -145,6 +149,18 @@ class World:
             new_world.append(new_line)
         self.world = new_world
 
+    def again(self):
+        """ Prompt user for continued animation """
+        self.screen.addstr(SIZE_Y // 2, SIZE_X // 2, "Continue? Y/n")
+        answer = self.screen.getch()
+        logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
+        if answer == 121 or answer == 89 or answer == 10:
+            return True
+        elif answer == 110 or answer == 78:
+            return False
+        else:
+            return self.again()
+
     def print_world(self):
         if self.mode == "curses":
             self._print_curses()
@@ -190,27 +206,14 @@ def main():
     """ Main function """
     run = True
     world = World(start="random", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
-    run_animation(world, 100, 0.1)
-    run = again(world)
+    world.animate(100, 0.1)
+    run = world.again()
     while run:
-        run_animation(world, 100, 0.1)
-        run = again(world)
+        world.animate(100, 0.1)
+        run = world.again()
     world.kill_screen()
 
 
-def run_animation(world, steps, dt):
-    """ Run animation steps times """
-    world.animate(steps, dt)
-
-
-def again(world):
-    """ Prompt user for continued animation """
-    world.screen.addstr(SIZE_Y//2, SIZE_X//2, "Continue? y/n")
-    answer = world.screen.getch()
-    if answer == 121 or answer == 89:
-        return True
-    else:
-        return False
 
 
 if __name__ == "__main__":
