@@ -9,7 +9,9 @@ import logging
 
 SIZE_X, SIZE_Y = 80, 40
 
-logging.basicConfig(filename="life.log", filemode="w", level=logging.INFO)
+logging.basicConfig(filename="life.log", filemode="w",
+                    format='%(asctime)s - %(levelname)s - %(message)s',
+                    level=logging.DEBUG)
 
 
 def signal_handler(signal, frame):
@@ -206,10 +208,10 @@ def main():
     """ Main function """
     run = True
     world = World(start="random", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
-    world.animate(100, 0.1)
+    world.animate(10, 0.1)
     run = world.again()
     while run:
-        world.animate(100, 0.1)
+        world.animate(10, 0.1)
         run = world.again()
     world.kill_screen()
 
