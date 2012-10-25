@@ -7,21 +7,22 @@ import signal
 import sys
 import logging
 
-SIZE_X, SIZE_Y = 80, 40
-
 logging.basicConfig(filename="life.log", filemode="w",
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 
 def signal_handler(signal, frame):
     """ Make Ctrl-c exit close curses window """
+    logging.info("Caught SIGINT, closing")
     curses.endwin()
     sys.exit(0)
 
 
 class World:
     def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
+        self.size_y = size_y
+        self.size_x = size_x
         if start == "gliders":
             if size_x < 40:
                 print("Needs at least 40 pixels wide for gliders")
@@ -41,7 +42,8 @@ class World:
 
     def gliders(self):
         """ Set the world to Gosper Glider Gun"""
-        world = [[0 for x in range(SIZE_X)] for y in range(SIZE_Y)]
+        logging.info("Generating Gosper Glider Gun world")
+        world = [[0 for x in range(self.size_x)] for y in range(self.size_y)]
         world[1][25] = 1
         world[2][23] = 1
         world[2][25] = 1
@@ -71,8 +73,9 @@ class World:
         self.world = world
 
     def random_world(self):
+        logging.info("Generating random world")
         self.world = [[random.randint(0, 1)
-                       for x in range(SIZE_X)] for y in range(SIZE_Y)]
+                       for x in range(self.size_x)] for y in range(self.size_y)]
 
     def _calculate_neighbours(self, position):
         """Return the number of neighbours of the cell in position position"""
@@ -83,17 +86,17 @@ class World:
                 for u in range(0, 2):
                     if u != 0 or v != 0:
                         cnt += self.world[y + v][x + u]
-        elif x == SIZE_X - 1 and y == 0:
+        elif x == self.size_x - 1 and y == 0:
             for v in range(0, 2):
                 for u in range(-1, 1):
                     if u != 0 or v != 0:
                         cnt += self.world[y + v][x + u]
-        elif x == 0 and y == SIZE_Y - 1:
+        elif x == 0 and y == self.size_y - 1:
             for v in range(-1, 1):
                 for u in range(0, 2):
                     if u != 0 or v != 0:
                         cnt += self.world[y + v][x + u]
-        elif x == SIZE_X - 1 and y == SIZE_Y - 1:
+        elif x == self.size_x - 1 and y == self.size_y - 1:
             for v in range(-1, 1):
                 for u in range(-1, 1):
                     if u != 0 or v != 0:
@@ -108,12 +111,12 @@ class World:
                 for u in range(-1, 2):
                     if u != 0 or v != 0:
                         cnt += self.world[y + v][x + u]
-        elif x == SIZE_X - 1:
+        elif x == self.size_x - 1:
             for v in range(-1, 2):
                 for u in range(-1, 1):
                     if u != 0 or v != 0:
                         cnt += self.world[y + v][x + u]
-        elif y == SIZE_Y - 1:
+        elif y == self.size_y - 1:
             for v in range(-1, 1):
                 for u in range(-1, 2):
                     if u != 0 or v != 0:
@@ -151,13 +154,20 @@ class World:
             new_world.append(new_line)
         self.world = new_world
 
+    def ask_user(self, question):
+        """ Ask the users a question, return answer as string """
+        self.screen.addstr(self.size_y // 2, self.size_x // 2, question + ' ')
+        answer = self.screen.getstr().decode("UTF-8")
+        return answer
+
     def again(self):
-        """ Prompt user for continued animation """
-        self.screen.addstr(SIZE_Y // 2, SIZE_X // 2, "Continue? Y/n")
+        """ Prompt user for continued animation, return False or the number of
+        generations to animate """
+        self.screen.addstr(self.size_y // 2, self.size_x // 2, "Continue? Y/n\n")
         answer = self.screen.getch()
         logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
         if answer == 121 or answer == 89 or answer == 10:
-            return True
+            return self.ask_user("How many generations?")
         elif answer == 110 or answer == 78:
             return False
         else:
@@ -198,26 +208,12 @@ class World:
 
     def animate(self, steps, dt=0.05):
         """ Update and print the screen 'step' times"""
+        logging.info("Started animation")
         for i in range(steps):
             self.update()
             self.print_world()
             time.sleep(dt)
+        logging.info("Animation finished")
 
 
-def main():
-    """ Main function """
-    run = True
-    world = World(start="random", mode="curses", size_x=SIZE_X, size_y=SIZE_Y)
-    world.animate(10, 0.1)
-    run = world.again()
-    while run:
-        world.animate(10, 0.1)
-        run = world.again()
-    world.kill_screen()
-
-
-
-
-if __name__ == "__main__":
-    signal.signal(signal.SIGINT, signal_handler)
-    main()
+signal.signal(signal.SIGINT, signal_handler)
