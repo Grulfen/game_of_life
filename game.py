@@ -10,6 +10,8 @@ def main():
                                mode="curses",
                                size_x=SIZE_X,
                                size_y=SIZE_Y)
+    world.load("gliders.gol")
+    world.initialize_screen()
     world.animate(10, 0.1)
     run = world.again()
     while run:

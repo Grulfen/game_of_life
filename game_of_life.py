@@ -9,7 +9,7 @@ import logging
 
 logging.basicConfig(filename="life.log", filemode="w",
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+                    level=logging.DEBUG)
 
 
 def signal_handler(signal, frame):
@@ -36,9 +36,18 @@ class World:
             self.random_world()
 
         self.mode = mode
-        if mode == "curses":
+
+    def initialize_screen(self):
+        """ Initialize curses """
+        if self.mode == "curses":
             self.screen = curses.initscr()
             self.screen.border(0)
+
+    def zero(self):
+        """ Set the world to all zeros """
+        logging.info("Generating empty world")
+        world = [[0 for x in range(self.size_x)] for y in range(self.size_y)]
+        self.world = world
 
     def gliders(self):
         """ Set the world to Gosper Glider Gun"""
@@ -206,6 +215,56 @@ class World:
         if self.mode == "curses":
             curses.endwin()
 
+    def save(self, filename="world.hur"):
+        """ Save the world to filename """
+        f = open(filename, 'w')
+        f.write("{0:d},{1:d}\n".format(self.size_x, self.size_y))
+        tmp_list = []
+        cnt = 0
+        current = 0
+        for line in self.world:
+            for cell in line:
+                if cell == current:
+                    cnt += 1
+                else:
+                    current = 1 - current
+                    tmp_list.append(cnt)
+                    cnt = 1
+        if cnt != 0:
+            tmp_list.append(cnt)
+        f.write(','.join(str(s) for s in tmp_list))
+        f.close()
+
+    def load(self, filename="world.hur"):
+        """ Load the world from filename """
+        logging.info("Loading file {0}".format(filename))
+        f = open(filename, 'r')
+        size = f.readline()
+        size = size.split(',')
+        try:
+            x, y = int(size[0]), int(size[1])
+            logging.info("World size is {0:d},{1:d}".format(x,y))
+        except ValueError:
+            logging.error("File not in correct format")
+            sys.exit(1)
+        world_compressed = f.readline().split(',')
+        f.close()
+        world_list = []
+        current = 0
+        for cnt in world_compressed:
+            world_list.extend([current for x in range(int(cnt))])
+            current = 1 - current
+        self.size_x = x
+        self.size_y = y
+        self.zero()
+        #logging.debug(world_list)
+        for cnt in range(y):
+            #FIXME funkar inte att ladda världen
+            logging.debug("y*x = {0}, (y+1*x = {1}".format(y*x, (y+1)*x))
+            #logging.debug(world_list[cnt * x : (cnt + 1) * x])
+            self.world[cnt] = world_list[cnt * x : (cnt + 1) * x]
+
+
     def animate(self, steps, dt=0.05):
         """ Update and print the screen 'step' times"""
         logging.info("Started animation")
@@ -214,6 +273,16 @@ class World:
             self.print_world()
             time.sleep(dt)
         logging.info("Animation finished")
+
+    def __str__(self):
+        tmp_str = []
+        tmp_line = []
+        for line in self.world:
+            for cell in line:
+                tmp_line.append(cell)
+            tmp_str.append(''.join(str(s) for s in tmp_line))
+            tmp_line = []
+        return('\n'.join(str(s) for s in tmp_str))
 
 
 signal.signal(signal.SIGINT, signal_handler)
