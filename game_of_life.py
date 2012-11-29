@@ -6,6 +6,7 @@ import random
 import signal
 import sys
 import logging
+import collections
 
 logging.basicConfig(filename="life.log", filemode="w",
                     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -23,6 +24,7 @@ class World:
     def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
         self.size_y = size_y
         self.size_x = size_x
+        self.zero()
         if start == "gliders":
             if size_x < 40:
                 print("Needs at least 40 pixels wide for gliders")
@@ -46,7 +48,7 @@ class World:
     def zero(self):
         """ Set the world to all zeros """
         logging.info("Generating empty world")
-        world = [[0 for x in range(self.size_x)] for y in range(self.size_y)]
+        world = collections.defaultdict(lambda: 0)
         self.world = world
 
     def gliders(self):
@@ -83,59 +85,10 @@ class World:
 
     def random_world(self):
         logging.info("Generating random world")
-        self.world = [[random.randint(0, 1)
-                       for x in range(self.size_x)] for y in range(self.size_y)]
-
-    def _calculate_neighbours(self, position):
-        """Return the number of neighbours of the cell in position position"""
-        x, y = position
-        cnt = 0
-        if x == 0 and y == 0:
-            for v in range(0, 2):
-                for u in range(0, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == self.size_x - 1 and y == 0:
-            for v in range(0, 2):
-                for u in range(-1, 1):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == 0 and y == self.size_y - 1:
-            for v in range(-1, 1):
-                for u in range(0, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == self.size_x - 1 and y == self.size_y - 1:
-            for v in range(-1, 1):
-                for u in range(-1, 1):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == 0:
-            for v in range(-1, 2):
-                for u in range(0, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif y == 0:
-            for v in range(0, 2):
-                for u in range(-1, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == self.size_x - 1:
-            for v in range(-1, 2):
-                for u in range(-1, 1):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif y == self.size_y - 1:
-            for v in range(-1, 1):
-                for u in range(-1, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        else:
-            for v in range(-1, 2):
-                for u in range(-1, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        return cnt
+        for i in range(self.size_x * self.size_y):
+            x = random.randint(0, self.size_x)
+            y = random.randint(0, self.size_x)
+            self.world[(x, y)] = 1
 
     def _new_cell(self, cell, neighbours):
         """Returns the new cell based on how many alive neighbours there is"""
@@ -152,15 +105,35 @@ class World:
             else:
                 return 0
 
+    def update_cell(self, new_world, pos):
+        """ Update the cell at position pos """
+        neighbours = 0
+        cell_x, cell_y = pos
+        for y in range(-1, 2):
+            for x in range(-1, 2):
+                if not(x == 0 and y == 0):
+                    neighbours += self.world[(x, y)]
+        new_cell = self._new_cell(self.world[(pos[0], pos[1])], neighbours)
+        if new_cell == 1:
+            new_world[(pos[0], pos[y])] = 1
+        return new_world
+
+    def update_neighbours(self, new_world, pos):
+        """Update the cells in new_world around cell in position pos"""
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                new_world = self.update_cell(new_world,
+                                             (pos[0] + x, pos[1] + y))
+        return new_world
+
     def update(self):
         """ Update the current world one step """
-        new_world = []
-        for y, line in enumerate(self.world):
-            new_line = []
-            for x, cell in enumerate(line):
-                neighbours = self._calculate_neighbours((x, y))
-                new_line.append(self._new_cell(cell, neighbours))
-            new_world.append(new_line)
+        new_world = collections.defaultdict(lambda: 0)
+        #TODO Fix update to dictionary type world
+        world = self.world.copy()
+        for pos, cell in world.items():
+            if cell == 1:
+                new_world = self.update_neighbours(new_world, pos)
         self.world = new_world
 
     def ask_user(self, question):
@@ -172,7 +145,8 @@ class World:
     def again(self):
         """ Prompt user for continued animation, return False or the number of
         generations to animate """
-        self.screen.addstr(self.size_y // 2, self.size_x // 2, "Continue? Y/n\n")
+        self.screen.addstr(self.size_y // 2, self.size_x // 2,
+                           "Continue? Y/n\n")
         answer = self.screen.getch()
         logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
         if answer == 121 or answer == 89 or answer == 10:
@@ -192,9 +166,9 @@ class World:
 
     def _print_to_screen(self):
         """Print world to screen"""
-        for line in self.world:
-            for x in line:
-                if x == 1:
+        for x in range(self.size_x):
+            for y in range(self.size_y):
+                if self.world[(x, y)]:
                     print("#", end="")
                 else:
                     print("_", end="")
@@ -243,7 +217,7 @@ class World:
         size = size.split(',')
         try:
             x, y = int(size[0]), int(size[1])
-            logging.info("World size is {0:d},{1:d}".format(x,y))
+            logging.info("World size is {0:d}, {1:d}".format(x, y))
         except ValueError:
             logging.error("File not in correct format")
             sys.exit(1)
@@ -260,10 +234,9 @@ class World:
         #logging.debug(world_list)
         for cnt in range(y):
             #FIXME funkar inte att ladda världen
-            logging.debug("y*x = {0}, (y+1*x = {1}".format(y*x, (y+1)*x))
+            logging.debug("y*x = {0}, (y+1*x = {1}".format(y * x, (y + 1) * x))
             #logging.debug(world_list[cnt * x : (cnt + 1) * x])
-            self.world[cnt] = world_list[cnt * x : (cnt + 1) * x]
-
+            self.world[cnt] = world_list[cnt * x: (cnt + 1) * x]
 
     def animate(self, steps, dt=0.05):
         """ Update and print the screen 'step' times"""
