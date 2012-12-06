@@ -6,7 +6,6 @@ import random
 import signal
 import sys
 import logging
-import collections
 
 logging.basicConfig(filename="life.log", filemode="w",
                     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -26,13 +25,10 @@ class World():
         self.size_y = size_y
         self.size_x = size_x
         self.zero()
-        self.world[(0, 0)] = 1
-        self.world[(1, 0)] = 1
-        self.world[(2, 0)] = 1
 
     def zero(self):
         """ Set the world to all zeros """
-        logging.info("Generating empty world")
+        logging.info("Clearing world")
         world = {}
         self.world = world
 
@@ -43,19 +39,59 @@ class World():
             y = random.randint(0, self.size_x)
             self.world[(x, y)] = 1
 
-    def print_screen(self, world=False):
+    def print_screen(self, world=False, start_pos=None, end_pos=None):
         """Print world to screen"""
         if not world:
             world = self.world
+        if start_pos and end_pos:
+            # Print world from start_pos to end_pos
+            start_x, start_y = start_pos
+            end_x, end_y = end_pos
         else:
-            print("Print special world")
-        for x in range(self.size_x):
-            for y in range(self.size_y):
+            # No positions specified. Print the whole world
+            start_x, start_y = self.min_pos()
+            end_x, end_y = self.max_pos()
+        for y in range(start_y, end_y + 1):
+            for x in range(start_x, end_x + 1):
                 if world.get((x, y), False):
                     print("#", end="")
                 else:
                     print("_", end="")
             print()
+
+    def min_pos(self):
+        """ Return the top, left position with alive cell"""
+        cells = list(self.world.keys())
+        if not cells:
+            # World empty
+            return (0, 0)
+        else:
+            leftmost = cells[0][0]
+            upmost = cells[0][1]
+            for cell in cells:
+                x,y = cell
+                if x < leftmost:
+                    leftmost = x
+                if y < upmost:
+                    upmost = y
+        return (leftmost, upmost)
+
+    def max_pos(self):
+        """ Return the bottom, right position with alive cell"""
+        cells = list(self.world.keys())
+        if not cells:
+            # World empty
+            return (10, 10)
+        else:
+            rightmost = cells[0][0]
+            downmost = cells[0][1]
+            for cell in cells:
+                x,y = cell
+                if x > rightmost:
+                    rightmost = x
+                if y > downmost:
+                    downmost = y
+        return (rightmost, downmost)
 
     def print_curses(self, screen, offset_x=10, offset_y=2):
         """Print the world using ncurses"""
@@ -110,8 +146,18 @@ class World():
         new_world = {}
         for pos, cell in self.world.items():
             new_world = self.update_neighbours(new_world, pos)
-            self.print_screen(new_world)
         self.world = new_world
+
+    def __str__(self):
+        string = ""
+        for y in range(self.size_y):
+            for x in range(self.size_x):
+                if self.world.get((x, y), False):
+                    string += "#"
+                else:
+                    string += "-"
+            string += "\n"
+        return string
 
 
 class Game:
