@@ -47,8 +47,6 @@ class World():
         """Print world to screen"""
         if not world:
             world = self.world
-        else:
-            print("Print special world")
         for x in range(self.size_x):
             for y in range(self.size_y):
                 if world.get((x, y), False):
@@ -97,19 +95,26 @@ class World():
             new_world[(pos)] = 1
         return new_world
 
-    def update_neighbours(self, new_world, pos):
+    def update_neighbours(self, new_world, pos, updated_cells):
         """Update the cells in new_world around cell in position pos"""
         for x in range(-1, 2):
             for y in range(-1, 2):
-                new_world = self.update_cell(new_world,
-                                             (pos[0] + x, pos[1] + y))
-        return new_world
+                print("Cell ({0}, {1})".format(x,y))
+                if (x,y) in updated_cells:
+                    print("({0}, {1}) is updated".format(x,y))
+                else:
+                    new_world = self.update_cell(new_world,
+                                                 (pos[0] + x, pos[1] + y))
+                    updated_cells.append((x,y))
+        return new_world, updated_cells
 
     def update(self):
         """ Update the current world one step """
         new_world = {}
+        updated_cells = []
         for pos, cell in self.world.items():
-            new_world = self.update_neighbours(new_world, pos)
+            new_world, updated_cells = self.update_neighbours(new_world, pos,
+                                                              updated_cells)
             self.print_screen(new_world)
         self.world = new_world
 
