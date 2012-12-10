@@ -1,4 +1,5 @@
-Game of_Life
-============
+Game of Life
+===========
+
 
 Conways game of life in python 3
