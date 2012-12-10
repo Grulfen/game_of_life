@@ -6,6 +6,7 @@ import random
 import signal
 import sys
 import logging
+import collections
 
 logging.basicConfig(filename="life.log", filemode="w",
                     format='%(asctime)s - %(levelname)s - %(message)s',
@@ -19,10 +20,110 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 
-class World:
+class World():
+    """ World class """
+    def __init__(self, size_x=10, size_y=10):
+        self.size_y = size_y
+        self.size_x = size_x
+        self.zero()
+        self.world[(0, 0)] = 1
+        self.world[(1, 0)] = 1
+        self.world[(2, 0)] = 1
+
+    def zero(self):
+        """ Set the world to all zeros """
+        logging.info("Generating empty world")
+        world = {}
+        self.world = world
+
+    def random(self, num):
+        self.zero()
+        for i in range(num):
+            x = random.randint(0, self.size_x)
+            y = random.randint(0, self.size_x)
+            self.world[(x, y)] = 1
+
+    def print_screen(self, world=False):
+        """Print world to screen"""
+        if not world:
+            world = self.world
+        for x in range(self.size_x):
+            for y in range(self.size_y):
+                if world.get((x, y), False):
+                    print("#", end="")
+                else:
+                    print("_", end="")
+            print()
+
+    def print_curses(self, screen, offset_x=10, offset_y=2):
+        """Print the world using ncurses"""
+        pass
+
+    def _new_cell(self, cell, neighbours):
+        """Returns the new cell based on how many alive neighbours there is"""
+        if cell == 1:
+            if neighbours < 2:
+                return 0
+            elif neighbours < 4:
+                return 1
+            else:
+                return 0
+        if cell == 0:
+            if neighbours == 3:
+                return 1
+            else:
+                return 0
+
+    def calculate_neighbours(self, pos):
+        """ calculate the number of neighbours of cell pos """
+        neighbours = 0
+        pos_x, pos_y = pos
+        for y in range(-1, 2):
+            for x in range(-1, 2):
+                if (x == 0 and y == 0):
+                    continue
+                else:
+                    neighbours += self.world.get((pos_x + x, pos_y + y), 0)
+        return neighbours
+
+    def update_cell(self, new_world, pos):
+        """ Update the cell at position pos """
+        neighbours = self.calculate_neighbours(pos)
+        new_cell = self._new_cell(self.world.get((pos[0], pos[1]),
+                                                 0), neighbours)
+        if new_cell == 1:
+            new_world[(pos)] = 1
+        return new_world
+
+    def update_neighbours(self, new_world, pos, updated_cells):
+        """Update the cells in new_world around cell in position pos"""
+        for x in range(-1, 2):
+            for y in range(-1, 2):
+                print("Cell ({0}, {1})".format(x,y))
+                if (x,y) in updated_cells:
+                    print("({0}, {1}) is updated".format(x,y))
+                else:
+                    new_world = self.update_cell(new_world,
+                                                 (pos[0] + x, pos[1] + y))
+                    updated_cells.append((x,y))
+        return new_world, updated_cells
+
+    def update(self):
+        """ Update the current world one step """
+        new_world = {}
+        updated_cells = []
+        for pos, cell in self.world.items():
+            new_world, updated_cells = self.update_neighbours(new_world, pos,
+                                                              updated_cells)
+            self.print_screen(new_world)
+        self.world = new_world
+
+
+class Game:
     def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
         self.size_y = size_y
         self.size_x = size_x
+        self.zero()
         if start == "gliders":
             if size_x < 40:
                 print("Needs at least 40 pixels wide for gliders")
@@ -43,14 +144,9 @@ class World:
             self.screen = curses.initscr()
             self.screen.border(0)
 
-    def zero(self):
-        """ Set the world to all zeros """
-        logging.info("Generating empty world")
-        world = [[0 for x in range(self.size_x)] for y in range(self.size_y)]
-        self.world = world
-
     def gliders(self):
         """ Set the world to Gosper Glider Gun"""
+        #TODO Fix with dictionary world
         logging.info("Generating Gosper Glider Gun world")
         world = [[0 for x in range(self.size_x)] for y in range(self.size_y)]
         world[1][25] = 1
@@ -81,88 +177,6 @@ class World:
         world[9][13:15] = [1, 1]
         self.world = world
 
-    def random_world(self):
-        logging.info("Generating random world")
-        self.world = [[random.randint(0, 1)
-                       for x in range(self.size_x)] for y in range(self.size_y)]
-
-    def _calculate_neighbours(self, position):
-        """Return the number of neighbours of the cell in position position"""
-        x, y = position
-        cnt = 0
-        if x == 0 and y == 0:
-            for v in range(0, 2):
-                for u in range(0, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == self.size_x - 1 and y == 0:
-            for v in range(0, 2):
-                for u in range(-1, 1):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == 0 and y == self.size_y - 1:
-            for v in range(-1, 1):
-                for u in range(0, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == self.size_x - 1 and y == self.size_y - 1:
-            for v in range(-1, 1):
-                for u in range(-1, 1):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == 0:
-            for v in range(-1, 2):
-                for u in range(0, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif y == 0:
-            for v in range(0, 2):
-                for u in range(-1, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif x == self.size_x - 1:
-            for v in range(-1, 2):
-                for u in range(-1, 1):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        elif y == self.size_y - 1:
-            for v in range(-1, 1):
-                for u in range(-1, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        else:
-            for v in range(-1, 2):
-                for u in range(-1, 2):
-                    if u != 0 or v != 0:
-                        cnt += self.world[y + v][x + u]
-        return cnt
-
-    def _new_cell(self, cell, neighbours):
-        """Returns the new cell based on how many alive neighbours there is"""
-        if cell == 1:
-            if neighbours < 2:
-                return 0
-            elif neighbours < 4:
-                return 1
-            else:
-                return 0
-        if cell == 0:
-            if neighbours == 3:
-                return 1
-            else:
-                return 0
-
-    def update(self):
-        """ Update the current world one step """
-        new_world = []
-        for y, line in enumerate(self.world):
-            new_line = []
-            for x, cell in enumerate(line):
-                neighbours = self._calculate_neighbours((x, y))
-                new_line.append(self._new_cell(cell, neighbours))
-            new_world.append(new_line)
-        self.world = new_world
-
     def ask_user(self, question):
         """ Ask the users a question, return answer as string """
         self.screen.addstr(self.size_y // 2, self.size_x // 2, question + ' ')
@@ -172,7 +186,8 @@ class World:
     def again(self):
         """ Prompt user for continued animation, return False or the number of
         generations to animate """
-        self.screen.addstr(self.size_y // 2, self.size_x // 2, "Continue? Y/n\n")
+        self.screen.addstr(self.size_y // 2, self.size_x // 2,
+                           "Continue? Y/n\n")
         answer = self.screen.getch()
         logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
         if answer == 121 or answer == 89 or answer == 10:
@@ -184,31 +199,11 @@ class World:
 
     def print_world(self):
         if self.mode == "curses":
-            self._print_curses()
+            self.world.print_curses()
         elif self.mode == "screen":
-            self._print_to_screen()
+            self.world.print_screen()
         else:
             pass
-
-    def _print_to_screen(self):
-        """Print world to screen"""
-        for line in self.world:
-            for x in line:
-                if x == 1:
-                    print("#", end="")
-                else:
-                    print("_", end="")
-            print()
-
-    def _print_curses(self, offset_x=10, offset_y=2):
-        """Print the world using ncurses"""
-        for y, line in enumerate(self.world):
-            for x, cell in enumerate(line):
-                if cell == 1:
-                    self.screen.addch(y + offset_y, x + offset_x, "#")
-                else:
-                    self.screen.addch(y + offset_y, x + offset_x, " ")
-        self.screen.refresh()
 
     def kill_screen(self):
         """ Kill the screen and cleanup """
@@ -243,7 +238,7 @@ class World:
         size = size.split(',')
         try:
             x, y = int(size[0]), int(size[1])
-            logging.info("World size is {0:d},{1:d}".format(x,y))
+            logging.info("World size is {0:d}, {1:d}".format(x, y))
         except ValueError:
             logging.error("File not in correct format")
             sys.exit(1)
@@ -260,10 +255,9 @@ class World:
         #logging.debug(world_list)
         for cnt in range(y):
             #FIXME funkar inte att ladda världen
-            logging.debug("y*x = {0}, (y+1*x = {1}".format(y*x, (y+1)*x))
+            logging.debug("y*x = {0}, (y+1*x = {1}".format(y * x, (y + 1) * x))
             #logging.debug(world_list[cnt * x : (cnt + 1) * x])
-            self.world[cnt] = world_list[cnt * x : (cnt + 1) * x]
-
+            self.world[cnt] = world_list[cnt * x: (cnt + 1) * x]
 
     def animate(self, steps, dt=0.05):
         """ Update and print the screen 'step' times"""
@@ -273,16 +267,6 @@ class World:
             self.print_world()
             time.sleep(dt)
         logging.info("Animation finished")
-
-    def __str__(self):
-        tmp_str = []
-        tmp_line = []
-        for line in self.world:
-            for cell in line:
-                tmp_line.append(cell)
-            tmp_str.append(''.join(str(s) for s in tmp_line))
-            tmp_line = []
-        return('\n'.join(str(s) for s in tmp_str))
 
 
 signal.signal(signal.SIGINT, signal_handler)
