@@ -25,6 +25,7 @@ class World():
         self.size_y = size_y
         self.size_x = size_x
         self.zero()
+        self.random(80)
 
     def zero(self):
         """ Set the world to all zeros """
@@ -59,6 +60,20 @@ class World():
                     print("_", end="")
             print()
 
+    def print_curses(self, screen, start_pos, end_pos):
+        """Print the world from start_pos to end_pos on ncurses screen"""
+        start_x, start_y = start_pos
+        end_x, end_y = end_pos
+        offset_x = start_x - 1
+        offset_y = start_y - 1
+        for y in range(start_y, end_y + 1):
+            for x in range(start_x, end_x + 1):
+                if self.world.get((x, y), False):
+                    screen.addch(x - offset_x, y - offset_y, "#")
+                else:
+                    screen.addch(x - offset_x, y - offset_y, "-")
+        screen.refresh()
+
     def min_pos(self):
         """ Return the top, left position with alive cell"""
         cells = list(self.world.keys())
@@ -69,7 +84,7 @@ class World():
             leftmost = cells[0][0]
             upmost = cells[0][1]
             for cell in cells:
-                x,y = cell
+                x, y = cell
                 if x < leftmost:
                     leftmost = x
                 if y < upmost:
@@ -86,16 +101,12 @@ class World():
             rightmost = cells[0][0]
             downmost = cells[0][1]
             for cell in cells:
-                x,y = cell
+                x, y = cell
                 if x > rightmost:
                     rightmost = x
                 if y > downmost:
                     downmost = y
         return (rightmost, downmost)
-
-    def print_curses(self, screen, offset_x=10, offset_y=2):
-        """Print the world using ncurses"""
-        pass
 
     def _new_cell(self, cell, neighbours):
         """Returns the new cell based on how many alive neighbours there is"""
@@ -137,13 +148,12 @@ class World():
         """Update the cells in new_world around cell in position pos"""
         for x in range(-1, 2):
             for y in range(-1, 2):
-                print("Cell ({0}, {1})".format(x,y))
-                if (x,y) in updated_cells:
-                    print("({0}, {1}) is updated".format(x,y))
+                if (x, y) in updated_cells:
+                    continue
                 else:
                     new_world = self.update_cell(new_world,
                                                  (pos[0] + x, pos[1] + y))
-                    updated_cells.append((x,y))
+                    updated_cells.append((x, y))
         return new_world, updated_cells
 
     def update(self):
@@ -171,7 +181,7 @@ class Game:
     def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
         self.size_y = size_y
         self.size_x = size_x
-        self.zero()
+        self.world = World(size_x, size_y)
         if start == "gliders":
             if size_x < 40:
                 print("Needs at least 40 pixels wide for gliders")
@@ -181,8 +191,6 @@ class Game:
                 sys.exit(1)
             else:
                 self.gliders()
-        else:
-            self.random_world()
 
         self.mode = mode
 
@@ -247,7 +255,7 @@ class Game:
 
     def print_world(self):
         if self.mode == "curses":
-            self.world.print_curses()
+            self.world.print_curses(self.screen, (0, 0), (20, 20))
         elif self.mode == "screen":
             self.world.print_screen()
         else:
@@ -257,6 +265,15 @@ class Game:
         """ Kill the screen and cleanup """
         if self.mode == "curses":
             curses.endwin()
+
+    def animate(self, steps, dt=0.5):
+        """ Update and print the screen 'step' times"""
+        logging.info("Started animation")
+        for i in range(steps):
+            self.world.update()
+            self.print_world()
+            time.sleep(dt)
+        logging.info("Animation finished")
 
     def save(self, filename="world.hur"):
         """ Save the world to filename """
@@ -306,15 +323,5 @@ class Game:
             logging.debug("y*x = {0}, (y+1*x = {1}".format(y * x, (y + 1) * x))
             #logging.debug(world_list[cnt * x : (cnt + 1) * x])
             self.world[cnt] = world_list[cnt * x: (cnt + 1) * x]
-
-    def animate(self, steps, dt=0.05):
-        """ Update and print the screen 'step' times"""
-        logging.info("Started animation")
-        for i in range(steps):
-            self.update()
-            self.print_world()
-            time.sleep(dt)
-        logging.info("Animation finished")
-
 
 signal.signal(signal.SIGINT, signal_handler)
