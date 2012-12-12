@@ -25,7 +25,7 @@ class World():
         self.size_y = size_y
         self.size_x = size_x
         self.zero()
-        self.random(80)
+        self.random(int(size_x*size_y*2/3))
 
     def zero(self):
         """ Set the world to all zeros """
@@ -153,7 +153,7 @@ class World():
                 else:
                     new_world = self.update_cell(new_world,
                                                  (pos[0] + x, pos[1] + y))
-                    updated_cells.append((x, y))
+                    updated_cells.append((pos[0] + x, pos[y] + y))
         return new_world, updated_cells
 
     def update(self):
@@ -182,6 +182,8 @@ class Game:
         self.size_y = size_y
         self.size_x = size_x
         self.world = World(size_x, size_y)
+        self.top_corner = (0, 0)
+        self.bottom_corner = (size_x, size_y)
         if start == "gliders":
             if size_x < 40:
                 print("Needs at least 40 pixels wide for gliders")
@@ -199,6 +201,11 @@ class Game:
         if self.mode == "curses":
             self.screen = curses.initscr()
             self.screen.border(0)
+
+            curses.noecho()
+            curses.cbreak()
+            self.screen.keypad(1)
+            curses.curs_set(0)
 
     def gliders(self):
         """ Set the world to Gosper Glider Gun"""
@@ -239,23 +246,55 @@ class Game:
         answer = self.screen.getstr().decode("UTF-8")
         return answer
 
-    def again(self):
-        """ Prompt user for continued animation, return False or the number of
-        generations to animate """
-        self.screen.addstr(self.size_y // 2, self.size_x // 2,
-                           "Continue? Y/n\n")
+    def prompt(self):
+        """ Wait for user input and update world:
+            space: continue one generation
+            up: move screen up
+            left: move screen left
+            down: move screen down
+            right: move screen right
+        """
         answer = self.screen.getch()
         logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
-        if answer == 121 or answer == 89 or answer == 10:
-            return self.ask_user("How many generations?")
-        elif answer == 110 or answer == 78:
-            return False
+        if answer == ord('w') or answer == curses.KEY_UP:
+            # Move world down
+            self.top_corner = (self.top_corner[0] - 1, self.top_corner[1])
+            self.bottom_corner = (self.bottom_corner[0] - 1,
+                                  self.bottom_corner[1])
+            self.print_world()
+        elif answer == ord('s') or answer == curses.KEY_DOWN:
+            # Move world up
+            self.top_corner = (self.top_corner[0] + 1, self.top_corner[1])
+            self.bottom_corner = (self.bottom_corner[0] + 1,
+                                  self.bottom_corner[1])
+            self.print_world()
+        elif answer == ord('a') or answer == curses.KEY_LEFT:
+            # Move world right
+            self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
+            self.bottom_corner = (self.bottom_corner[0],
+                                  self.bottom_corner[1] - 1)
+            self.print_world()
+        elif answer == ord('d') or answer == curses.KEY_RIGHT:
+            # Move world left
+            self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
+            self.bottom_corner = (self.bottom_corner[0],
+                                  self.bottom_corner[1] + 1)
+            self.print_world()
+        elif answer == ord(" "):
+            # Update world
+            self.world.update()
+            self.print_world()
+        elif answer == ord("q"):
+            # quit game
+            self.kill_screen()
+            sys.exit(0)
         else:
-            return self.again()
+            self.prompt()
 
     def print_world(self):
         if self.mode == "curses":
-            self.world.print_curses(self.screen, (0, 0), (20, 20))
+            self.world.print_curses(self.screen, self.top_corner,
+                                    self.bottom_corner)
         elif self.mode == "screen":
             self.world.print_screen()
         else:
@@ -275,53 +314,5 @@ class Game:
             time.sleep(dt)
         logging.info("Animation finished")
 
-    def save(self, filename="world.hur"):
-        """ Save the world to filename """
-        f = open(filename, 'w')
-        f.write("{0:d},{1:d}\n".format(self.size_x, self.size_y))
-        tmp_list = []
-        cnt = 0
-        current = 0
-        for line in self.world:
-            for cell in line:
-                if cell == current:
-                    cnt += 1
-                else:
-                    current = 1 - current
-                    tmp_list.append(cnt)
-                    cnt = 1
-        if cnt != 0:
-            tmp_list.append(cnt)
-        f.write(','.join(str(s) for s in tmp_list))
-        f.close()
-
-    def load(self, filename="world.hur"):
-        """ Load the world from filename """
-        logging.info("Loading file {0}".format(filename))
-        f = open(filename, 'r')
-        size = f.readline()
-        size = size.split(',')
-        try:
-            x, y = int(size[0]), int(size[1])
-            logging.info("World size is {0:d}, {1:d}".format(x, y))
-        except ValueError:
-            logging.error("File not in correct format")
-            sys.exit(1)
-        world_compressed = f.readline().split(',')
-        f.close()
-        world_list = []
-        current = 0
-        for cnt in world_compressed:
-            world_list.extend([current for x in range(int(cnt))])
-            current = 1 - current
-        self.size_x = x
-        self.size_y = y
-        self.zero()
-        #logging.debug(world_list)
-        for cnt in range(y):
-            #FIXME funkar inte att ladda världen
-            logging.debug("y*x = {0}, (y+1*x = {1}".format(y * x, (y + 1) * x))
-            #logging.debug(world_list[cnt * x : (cnt + 1) * x])
-            self.world[cnt] = world_list[cnt * x: (cnt + 1) * x]
 
 signal.signal(signal.SIGINT, signal_handler)

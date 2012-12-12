@@ -1,6 +1,6 @@
 import game_of_life
 
-SIZE_X, SIZE_Y = 20, 20
+SIZE_X, SIZE_Y = 60, 60
 
 
 def main():
@@ -12,12 +12,9 @@ def main():
                              size_y=SIZE_Y)
     game.initialize_screen()
     game.print_world()
-    run = game.again()
-    while run:
-        game.animate(int(run), 0.5)
-        run = game.again()
-    game.kill_screen()
-
+    while True:
+        game.prompt()
+        game.print_world()
 
 if __name__ == "__main__":
     main()
