@@ -25,7 +25,7 @@ class World():
         self.size_y = size_y
         self.size_x = size_x
         self.zero()
-        self.random(int(size_x*size_y*2/3))
+        self.random(int(size_x * size_y * 2 / 3))
 
     def zero(self):
         """ Set the world to all zeros """
@@ -280,10 +280,20 @@ class Game:
             self.bottom_corner = (self.bottom_corner[0],
                                   self.bottom_corner[1] + 1)
             self.print_world()
+        elif answer == ord("r"):
+            # Ask user how many generations to animate
+            try:
+                num = int(self.ask_user("How many generations"))
+            except ValueError:
+                self.ask_user("Enter integer please")
+                return
+            self.animate(num, 0)
+
         elif answer == ord(" "):
             # Update world
             self.world.update()
             self.print_world()
+
         elif answer == ord("q"):
             # quit game
             self.kill_screen()
@@ -305,7 +315,7 @@ class Game:
         if self.mode == "curses":
             curses.endwin()
 
-    def animate(self, steps, dt=0.5):
+    def animate(self, steps, dt=0.2):
         """ Update and print the screen 'step' times"""
         logging.info("Started animation")
         for i in range(steps):

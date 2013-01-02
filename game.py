@@ -1,6 +1,6 @@
 import game_of_life
 
-SIZE_X, SIZE_Y = 60, 60
+SIZE_X, SIZE_Y = 30, 40
 
 
 def main():
