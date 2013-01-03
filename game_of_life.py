@@ -19,9 +19,10 @@ def signal_handler(signal, frame):
     sys.exit(0)
 
 
-class World():
+class World:
     """ World class """
     def __init__(self, size_x=10, size_y=10):
+        logging.info("Instantianting World")
         self.size_y = size_y
         self.size_x = size_x
         self.zero()
@@ -34,6 +35,7 @@ class World():
         self.world = world
 
     def random(self, num):
+        logging.info("Random world")
         self.zero()
         for i in range(num):
             x = random.randint(0, self.size_x)
@@ -249,10 +251,11 @@ class Game:
     def prompt(self):
         """ Wait for user input and update world:
             space: continue one generation
-            up: move screen up
-            left: move screen left
-            down: move screen down
-            right: move screen right
+            w or up: move screen up
+            a or left: move screen left
+            s or down: move screen down
+            f or right: move screen right
+            r: ask user how many generations to run and then run them
         """
         answer = self.screen.getch()
         logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
@@ -287,7 +290,7 @@ class Game:
             except ValueError:
                 self.ask_user("Enter integer please")
                 return
-            self.animate(num, 0)
+            self.animate(num)
 
         elif answer == ord(" "):
             # Update world
