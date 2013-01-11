@@ -9,7 +9,7 @@ import logging
 
 logging.basicConfig(filename="life.log", filemode="w",
                     format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.DEBUG)
+                    level=logging.INFO)
 
 
 def signal_handler(signal, frame):
@@ -26,20 +26,22 @@ class World:
         self.size_y = size_y
         self.size_x = size_x
         self.zero()
-        self.random(int(size_x * size_y * 2 / 3))
+        self.random(int(size_x * size_y * 1 / 3))
 
     def zero(self):
         """ Set the world to all zeros """
-        logging.info("Clearing world")
+        logging.info("In World.zero: Clearing world")
         world = {}
         self.world = world
 
     def random(self, num):
-        logging.info("Random world")
+        logging.info(
+            "In World.random: num={0}, size_x={1}, size_y={2}".format(
+                num, self.size_x, self.size_y))
         self.zero()
         for i in range(num):
             x = random.randint(0, self.size_x)
-            y = random.randint(0, self.size_x)
+            y = random.randint(0, self.size_y)
             self.world[(x, y)] = 1
 
     def print_screen(self, world=False, start_pos=None, end_pos=None):
@@ -139,6 +141,9 @@ class World:
 
     def update_cell(self, new_world, pos):
         """ Update the cell at position pos """
+        logging.info("In World.update_cell: updating cell ({0}, {1})".format(
+            pos[0], pos[1]
+        ))
         neighbours = self.calculate_neighbours(pos)
         new_cell = self._new_cell(self.world.get((pos[0], pos[1]),
                                                  0), neighbours)
@@ -150,19 +155,27 @@ class World:
         """Update the cells in new_world around cell in position pos"""
         for x in range(-1, 2):
             for y in range(-1, 2):
-                if (x, y) in updated_cells:
+                logging.debug("In World.update_neighbours updating ({0}, {1})".format(pos[0] + x, pos[1] + y))
+                logging.debug("Cells already updated: {0}".format(updated_cells))
+                if (pos[0] + x, pos[1] + y) in updated_cells:
+                    logging.debug(
+                        "In World.update_neighbours: ({0}, {1}) already updated, continuing".format(pos[0] + x, pos[1] + y))
                     continue
                 else:
-                    new_world = self.update_cell(new_world,
-                                                 (pos[0] + x, pos[1] + y))
-                    updated_cells.append((pos[0] + x, pos[y] + y))
+                    logging.debug("In World.update_neigbours: ({0}, {1}) not updated, updating now".format(pos[0] + x, pos[1] + y))
+                    new_world = self.update_cell(new_world, (pos[0] + x, pos[1] + y))
+                    updated_cells.add((pos[0] + x, pos[1] + y))
         return new_world, updated_cells
 
     def update(self):
         """ Update the current world one step """
+        logging.info("In World.update: updating world")
         new_world = {}
-        updated_cells = []
+        updated_cells = set() 
         for pos, cell in self.world.items():
+            logging.info("In World.update: updating cell ({0}, {1})".format(
+                pos[0], pos[1])
+            )
             new_world, updated_cells = self.update_neighbours(new_world, pos,
                                                               updated_cells)
         self.world = new_world
@@ -181,8 +194,8 @@ class World:
 
 class Game:
     def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
-        self.size_y = size_y
         self.size_x = size_x
+        self.size_y = size_y
         self.world = World(size_x, size_y)
         self.top_corner = (0, 0)
         self.bottom_corner = (size_x, size_y)
@@ -294,13 +307,18 @@ class Game:
 
         elif answer == ord(" "):
             # Update world
+            logging.info("In Game.prompt: Updating world one generation")
             self.world.update()
             self.print_world()
 
         elif answer == ord("q"):
             # quit game
             self.kill_screen()
+            logging.info(
+                "In Game.prompt: got 'q': game is quitting. World = {0}".format(
+                    self.world.world))
             sys.exit(0)
+
         else:
             self.prompt()
 
