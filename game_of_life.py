@@ -46,8 +46,6 @@ class World:
 
     def print_screen(self, world=False, start_pos=None, end_pos=None):
         """Print world to screen"""
-        if not world:
-            world = self.world
         if start_pos and end_pos:
             # Print world from start_pos to end_pos
             start_x, start_y = start_pos
@@ -58,7 +56,7 @@ class World:
             end_x, end_y = self.max_pos()
         for y in range(start_y, end_y + 1):
             for x in range(start_x, end_x + 1):
-                if world.get((x, y), False):
+                if self.world.get((x, y), False):
                     print("#", end="")
                 else:
                     print("_", end="")
@@ -73,9 +71,9 @@ class World:
         for y in range(start_y, end_y + 1):
             for x in range(start_x, end_x + 1):
                 if self.world.get((x, y), False):
-                    screen.addch(x - offset_x, y - offset_y, "#")
+                    screen.addch(y - offset_y, x - offset_x, "#")
                 else:
-                    screen.addch(x - offset_x, y - offset_y, "-")
+                    screen.addch(y - offset_y, x - offset_x, "-")
         screen.refresh()
 
     def min_pos(self):
@@ -155,14 +153,11 @@ class World:
         """Update the cells in new_world around cell in position pos"""
         for x in range(-1, 2):
             for y in range(-1, 2):
-                logging.debug("In World.update_neighbours updating ({0}, {1})".format(pos[0] + x, pos[1] + y))
-                logging.debug("Cells already updated: {0}".format(updated_cells))
                 if (pos[0] + x, pos[1] + y) in updated_cells:
-                    logging.debug(
-                        "In World.update_neighbours: ({0}, {1}) already updated, continuing".format(pos[0] + x, pos[1] + y))
+                    # Cell already updated, continue
                     continue
                 else:
-                    logging.debug("In World.update_neigbours: ({0}, {1}) not updated, updating now".format(pos[0] + x, pos[1] + y))
+                    # Cell not updated yet, updating
                     new_world = self.update_cell(new_world, (pos[0] + x, pos[1] + y))
                     updated_cells.add((pos[0] + x, pos[1] + y))
         return new_world, updated_cells
@@ -193,28 +188,20 @@ class World:
 
 
 class Game:
-    def __init__(self, start=False, mode="screen", size_x=40, size_y=40):
+    def __init__(self, start=False, mode="screen", size_x=20, size_y=20,
+                 max_size=False):
+
         self.size_x = size_x
         self.size_y = size_y
-        self.world = World(size_x, size_y)
-        self.top_corner = (0, 0)
-        self.bottom_corner = (size_x, size_y)
-        if start == "gliders":
-            if size_x < 40:
-                print("Needs at least 40 pixels wide for gliders")
-                sys.exit(1)
-            elif size_y < 10:
-                print("Needs at least 10 pixels long for gliders")
-                sys.exit(1)
-            else:
-                self.gliders()
-
         self.mode = mode
 
-    def initialize_screen(self):
-        """ Initialize curses """
         if self.mode == "curses":
             self.screen = curses.initscr()
+            if max_size:
+                size_y_max, size_x_max = self.screen.getmaxyx()
+                # Need space for border
+                self.size_y, self.size_x = size_y_max - 3 , size_x_max - 3
+
             self.screen.border(0)
 
             curses.noecho()
@@ -222,38 +209,9 @@ class Game:
             self.screen.keypad(1)
             curses.curs_set(0)
 
-    def gliders(self):
-        """ Set the world to Gosper Glider Gun"""
-        #TODO Fix with dictionary world
-        logging.info("Generating Gosper Glider Gun world")
-        world = [[0 for x in range(self.size_x)] for y in range(self.size_y)]
-        world[1][25] = 1
-        world[2][23] = 1
-        world[2][25] = 1
-        world[3][13:15] = [1, 1]
-        world[3][21:23] = [1, 1]
-        world[3][35:37] = [1, 1]
-        world[4][12] = 1
-        world[4][16] = 1
-        world[4][21:23] = [1, 1]
-        world[4][35:37] = [1, 1]
-        world[5][1:3] = [1, 1]
-        world[5][11] = 1
-        world[5][17] = 1
-        world[5][21:23] = [1, 1]
-        world[6][1:3] = [1, 1]
-        world[6][11] = 1
-        world[6][15] = 1
-        world[6][17:19] = [1, 1]
-        world[6][23] = 1
-        world[6][25] = 1
-        world[7][11] = 1
-        world[7][17] = 1
-        world[7][25] = 1
-        world[8][12] = 1
-        world[8][16] = 1
-        world[9][13:15] = [1, 1]
-        self.world = world
+        self.world = World(self.size_x, self.size_y)
+        self.top_corner = (0, 0)
+        self.bottom_corner = (self.size_x, self.size_y)
 
     def ask_user(self, question):
         """ Ask the users a question, return answer as string """
@@ -274,27 +232,27 @@ class Game:
         logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
         if answer == ord('w') or answer == curses.KEY_UP:
             # Move world down
-            self.top_corner = (self.top_corner[0] - 1, self.top_corner[1])
-            self.bottom_corner = (self.bottom_corner[0] - 1,
-                                  self.bottom_corner[1])
-            self.print_world()
-        elif answer == ord('s') or answer == curses.KEY_DOWN:
-            # Move world up
-            self.top_corner = (self.top_corner[0] + 1, self.top_corner[1])
-            self.bottom_corner = (self.bottom_corner[0] + 1,
-                                  self.bottom_corner[1])
-            self.print_world()
-        elif answer == ord('a') or answer == curses.KEY_LEFT:
-            # Move world right
             self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
             self.bottom_corner = (self.bottom_corner[0],
                                   self.bottom_corner[1] - 1)
             self.print_world()
-        elif answer == ord('d') or answer == curses.KEY_RIGHT:
-            # Move world left
+        elif answer == ord('s') or answer == curses.KEY_DOWN:
+            # Move world up
             self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
             self.bottom_corner = (self.bottom_corner[0],
                                   self.bottom_corner[1] + 1)
+            self.print_world()
+        elif answer == ord('a') or answer == curses.KEY_LEFT:
+            # Move world right
+            self.top_corner = (self.top_corner[0] - 1, self.top_corner[1])
+            self.bottom_corner = (self.bottom_corner[0] - 1,
+                                  self.bottom_corner[1])
+            self.print_world()
+        elif answer == ord('d') or answer == curses.KEY_RIGHT:
+            # Move world left
+            self.top_corner = (self.top_corner[0] + 1, self.top_corner[1])
+            self.bottom_corner = (self.bottom_corner[0] + 1,
+                                  self.bottom_corner[1])
             self.print_world()
         elif answer == ord("r"):
             # Ask user how many generations to animate
