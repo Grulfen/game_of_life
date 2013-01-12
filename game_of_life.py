@@ -71,9 +71,10 @@ class World:
         for y in range(start_y, end_y + 1):
             for x in range(start_x, end_x + 1):
                 if self.world.get((x, y), False):
-                    screen.addch(y - offset_y, x - offset_x, "#")
+                    screen.addch(y - offset_y, x - offset_x, "#",
+                                 curses.color_pair(1))
                 else:
-                    screen.addch(y - offset_y, x - offset_x, "-")
+                    screen.addch(y - offset_y, x - offset_x, ".")
         screen.refresh()
 
     def min_pos(self):
@@ -196,22 +197,33 @@ class Game:
         self.mode = mode
 
         if self.mode == "curses":
-            self.screen = curses.initscr()
-            if max_size:
-                size_y_max, size_x_max = self.screen.getmaxyx()
-                # Need space for border
-                self.size_y, self.size_x = size_y_max - 3 , size_x_max - 3
-
-            self.screen.border(0)
-
-            curses.noecho()
-            curses.cbreak()
-            self.screen.keypad(1)
-            curses.curs_set(0)
+            self.init_curses(max_size)
 
         self.world = World(self.size_x, self.size_y)
         self.top_corner = (0, 0)
         self.bottom_corner = (self.size_x, self.size_y)
+
+    def init_curses(self, max_size):
+        """ Initilize the curses screen """
+        self.screen = curses.initscr()
+        curses.start_color()
+        if not curses.has_colors():
+            self.exit("Error, no color support", 1)
+        else:
+            # We have color support
+            # Pair 1, green on black background
+            curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        if max_size:
+            # Get maximum size of screen
+            size_y_max, size_x_max = self.screen.getmaxyx()
+            # Need space for border
+            self.size_y, self.size_x = size_y_max - 3 , size_x_max - 3
+
+        self.screen.border(0)
+        curses.noecho()
+        curses.cbreak()
+        self.screen.keypad(1)
+        curses.curs_set(0)
 
     def ask_user(self, question):
         """ Ask the users a question, return answer as string """
@@ -271,11 +283,10 @@ class Game:
 
         elif answer == ord("q"):
             # quit game
-            self.kill_screen()
             logging.info(
                 "In Game.prompt: got 'q': game is quitting. World = {0}".format(
                     self.world.world))
-            sys.exit(0)
+            self.exit("Quitting", 0)
 
         else:
             self.prompt()
@@ -293,6 +304,14 @@ class Game:
         """ Kill the screen and cleanup """
         if self.mode == "curses":
             curses.endwin()
+
+    def exit(self, msg=None, status=0):
+        self.kill_screen()
+        if msg:
+            print(msg)
+        if type(status) != type(int):
+            status = 0
+        sys.exit(status)
 
     def animate(self, steps, dt=0.2):
         """ Update and print the screen 'step' times"""
