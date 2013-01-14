@@ -5,16 +5,16 @@ import time
 import random
 import signal
 import sys
-import logging
+#import logging
 
-logging.basicConfig(filename="life.log", filemode="w",
-                    format='%(asctime)s - %(levelname)s - %(message)s',
-                    level=logging.INFO)
+#logging.basicConfig(filename="life.log", filemode="w",
+#                    format='%(asctime)s - %(levelname)s - %(message)s',
+#                    level=logging.INFO)
 
 
 def signal_handler(signal, frame):
     """ Make Ctrl-c exit close curses window """
-    logging.info("Caught SIGINT, closing")
+    #logging.info("Caught SIGINT, closing")
     curses.endwin()
     sys.exit(0)
 
@@ -22,22 +22,23 @@ def signal_handler(signal, frame):
 class World:
     """ World class """
     def __init__(self, size_x=10, size_y=10):
-        logging.info("Instantianting World")
+        #logging.info("Instantianting World")
         self.size_y = size_y
         self.size_x = size_x
+        self.make_neigh_cache()
         self.zero()
         self.random(int(size_x * size_y * 1 / 3))
 
     def zero(self):
         """ Set the world to all zeros """
-        logging.info("In World.zero: Clearing world")
+        #logging.info("In World.zero: Clearing world")
         world = {}
         self.world = world
 
     def random(self, num):
-        logging.info(
-            "In World.random: num={0}, size_x={1}, size_y={2}".format(
-                num, self.size_x, self.size_y))
+        #logging.info(
+        #    "In World.random: num={0}, size_x={1}, size_y={2}".format(
+        #        num, self.size_x, self.size_y))
         self.zero()
         for i in range(num):
             x = random.randint(0, self.size_x)
@@ -125,24 +126,23 @@ class World:
                 return 1
             else:
                 return 0
+    def make_neigh_cache(self):
+        self.neigh_cache = [(x, y) for x in range(-1,2) for y in range(-1,2) if not (x
+                      == 0 and y == 0)]
 
     def calculate_neighbours(self, pos):
         """ calculate the number of neighbours of cell pos """
         neighbours = 0
         pos_x, pos_y = pos
-        for y in range(-1, 2):
-            for x in range(-1, 2):
-                if (x == 0 and y == 0):
-                    continue
-                else:
-                    neighbours += self.world.get((pos_x + x, pos_y + y), 0)
+        for x, y in self.neigh_cache:
+            neighbours += self.world.get((pos_x + x, pos_y + y), 0)
         return neighbours
 
     def update_cell(self, new_world, pos):
         """ Update the cell at position pos """
-        logging.info("In World.update_cell: updating cell ({0}, {1})".format(
-            pos[0], pos[1]
-        ))
+        #logging.info("In World.update_cell: updating cell ({0}, {1})".format(
+        #    pos[0], pos[1]
+        #))
         neighbours = self.calculate_neighbours(pos)
         new_cell = self._new_cell(self.world.get((pos[0], pos[1]),
                                                  0), neighbours)
@@ -165,13 +165,13 @@ class World:
 
     def update(self):
         """ Update the current world one step """
-        logging.info("In World.update: updating world")
+        #logging.info("In World.update: updating world")
         new_world = {}
         updated_cells = set() 
         for pos, cell in self.world.items():
-            logging.info("In World.update: updating cell ({0}, {1})".format(
-                pos[0], pos[1])
-            )
+            #logging.info("In World.update: updating cell ({0}, {1})".format(
+            #    pos[0], pos[1])
+            #)
             new_world, updated_cells = self.update_neighbours(new_world, pos,
                                                               updated_cells)
         self.world = new_world
@@ -227,7 +227,8 @@ class Game:
 
     def ask_user(self, question):
         """ Ask the users a question, return answer as string """
-        self.screen.addstr(self.size_y // 2, self.size_x // 2, question + ' ')
+        q_size = len(question)
+        self.screen.addstr(self.size_y // 2, self.size_x // 2 - q_size // 2, question + ' ')
         answer = self.screen.getstr().decode("UTF-8")
         return answer
 
@@ -241,7 +242,7 @@ class Game:
             r: ask user how many generations to run and then run them
         """
         answer = self.screen.getch()
-        logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
+        #logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
         if answer == ord('w') or answer == curses.KEY_UP:
             # Move world down
             self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
@@ -277,15 +278,15 @@ class Game:
 
         elif answer == ord(" "):
             # Update world
-            logging.info("In Game.prompt: Updating world one generation")
+            #logging.info("In Game.prompt: Updating world one generation")
             self.world.update()
             self.print_world()
 
         elif answer == ord("q"):
             # quit game
-            logging.info(
-                "In Game.prompt: got 'q': game is quitting. World = {0}".format(
-                    self.world.world))
+            #logging.info(
+            #    "In Game.prompt: got 'q': game is quitting. World = {0}".format(
+            #        self.world.world))
             self.exit("Quitting", 0)
 
         else:
@@ -315,12 +316,12 @@ class Game:
 
     def animate(self, steps, dt=0.2):
         """ Update and print the screen 'step' times"""
-        logging.info("Started animation")
+        #logging.info("Started animation")
         for i in range(steps):
             self.world.update()
             self.print_world()
             time.sleep(dt)
-        logging.info("Animation finished")
+        #logging.info("Animation finished")
 
 
 signal.signal(signal.SIGINT, signal_handler)
