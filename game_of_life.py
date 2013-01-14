@@ -5,6 +5,7 @@ import time
 import random
 import signal
 import sys
+from collections import defaultdict
 
 
 def signal_handler(signal, frame):
@@ -24,7 +25,7 @@ class World:
 
     def zero(self):
         """ Set the world to all zeros """
-        world = {}
+        world = defaultdict(lambda: 0)
         self.world = world
 
     def random(self, num):
@@ -46,7 +47,7 @@ class World:
             end_x, end_y = self.max_pos()
         for y in range(start_y, end_y + 1):
             for x in range(start_x, end_x + 1):
-                if self.world.get((x, y), False):
+                if self.world[(x, y)]:
                     print("#", end="")
                 else:
                     print("_", end="")
@@ -58,7 +59,7 @@ class World:
         end_x, end_y = end_pos
         offset_x = start_x - 1
         offset_y = start_y - 1
-        line_of_lines = [''.join(['#' if self.world.get((x,y), False) else '-' 
+        line_of_lines = [''.join(['#' if self.world[(x,y)] else '-' 
                                   for x in range(start_x, end_x + 1) 
                                  ]) for y in range(start_y, end_y + 1)]
         # TODO Add colors?
@@ -134,14 +135,13 @@ class World:
         neighbours = 0
         pos_x, pos_y = pos
         for x, y in self._neigh_cache:
-            neighbours += self.world.get((pos_x + x, pos_y + y), 0)
+            neighbours += self.world[(pos_x + x, pos_y + y)]
         return neighbours
 
     def update_cell(self, new_world, pos):
         """ Update the cell at position pos """
         neighbours = self.calculate_neighbours(pos)
-        new_cell = self._new_cell(self.world.get((pos[0], pos[1]),
-                                                 0), neighbours)
+        new_cell = self._new_cell(self.world[(pos[0], pos[1])], neighbours)
         if new_cell == 1:
             new_world[(pos)] = 1
         return new_world
@@ -160,9 +160,10 @@ class World:
 
     def update(self):
         """ Update the current world one step """
-        new_world = {}
+        new_world = defaultdict(lambda: 0)
         updated_cells = set() 
-        for pos, cell in self.world.items():
+        for pos in list(self.world.keys()):
+            cell = self.world[pos]
             new_world, updated_cells = self.update_neighbours(new_world, pos,
                                                               updated_cells)
         self.world = new_world
@@ -171,7 +172,7 @@ class World:
         string = ""
         for y in range(self.size_y):
             for x in range(self.size_x):
-                if self.world.get((x, y), False):
+                if self.world[(x, y)]:
                     string += "#"
                 else:
                     string += "-"

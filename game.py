@@ -1,6 +1,7 @@
+#!/usr/bin/env python3
 import game_of_life
 
-SIZE_X, SIZE_Y = 10, 20
+SIZE_X, SIZE_Y = 80, 30
 
 def main():
     """ Main function """
