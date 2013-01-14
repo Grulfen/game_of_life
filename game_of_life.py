@@ -5,16 +5,10 @@ import time
 import random
 import signal
 import sys
-#import logging
-
-#logging.basicConfig(filename="life.log", filemode="w",
-#                    format='%(asctime)s - %(levelname)s - %(message)s',
-#                    level=logging.INFO)
 
 
 def signal_handler(signal, frame):
     """ Make Ctrl-c exit close curses window """
-    #logging.info("Caught SIGINT, closing")
     curses.endwin()
     sys.exit(0)
 
@@ -22,7 +16,6 @@ def signal_handler(signal, frame):
 class World:
     """ World class """
     def __init__(self, size_x=10, size_y=10):
-        #logging.info("Instantianting World")
         self.size_y = size_y
         self.size_x = size_x
         self.make_neigh_cache()
@@ -31,14 +24,10 @@ class World:
 
     def zero(self):
         """ Set the world to all zeros """
-        #logging.info("In World.zero: Clearing world")
         world = {}
         self.world = world
 
     def random(self, num):
-        #logging.info(
-        #    "In World.random: num={0}, size_x={1}, size_y={2}".format(
-        #        num, self.size_x, self.size_y))
         self.zero()
         for i in range(num):
             x = random.randint(0, self.size_x)
@@ -150,9 +139,6 @@ class World:
 
     def update_cell(self, new_world, pos):
         """ Update the cell at position pos """
-        #logging.info("In World.update_cell: updating cell ({0}, {1})".format(
-        #    pos[0], pos[1]
-        #))
         neighbours = self.calculate_neighbours(pos)
         new_cell = self._new_cell(self.world.get((pos[0], pos[1]),
                                                  0), neighbours)
@@ -174,13 +160,9 @@ class World:
 
     def update(self):
         """ Update the current world one step """
-        #logging.info("In World.update: updating world")
         new_world = {}
         updated_cells = set() 
         for pos, cell in self.world.items():
-            #logging.info("In World.update: updating cell ({0}, {1})".format(
-            #    pos[0], pos[1])
-            #)
             new_world, updated_cells = self.update_neighbours(new_world, pos,
                                                               updated_cells)
         self.world = new_world
@@ -287,15 +269,11 @@ class Game:
 
         elif answer == ord(" "):
             # Update world
-            #logging.info("In Game.prompt: Updating world one generation")
             self.world.update()
             self.print_world()
 
         elif answer == ord("q"):
             # quit game
-            #logging.info(
-            #    "In Game.prompt: got 'q': game is quitting. World = {0}".format(
-            #        self.world.world))
             self.exit("Quitting", 0)
 
         else:
@@ -325,12 +303,10 @@ class Game:
 
     def animate(self, steps, dt=0.2):
         """ Update and print the screen 'step' times"""
-        #logging.info("Started animation")
         for i in range(steps):
             self.world.update()
             self.print_world()
             time.sleep(dt)
-        #logging.info("Animation finished")
 
 
 signal.signal(signal.SIGINT, signal_handler)
