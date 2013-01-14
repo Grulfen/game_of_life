@@ -69,13 +69,20 @@ class World:
         end_x, end_y = end_pos
         offset_x = start_x - 1
         offset_y = start_y - 1
-        for y in range(start_y, end_y + 1):
-            for x in range(start_x, end_x + 1):
-                if self.world.get((x, y), False):
-                    screen.addch(y - offset_y, x - offset_x, "#",
-                                 curses.color_pair(1))
-                else:
-                    screen.addch(y - offset_y, x - offset_x, ".")
+        line_of_lines = [''.join(['#' if self.world.get((x,y), False) else '-' 
+                                  for x in range(start_x, end_x + 1) 
+                                 ]) for y in range(start_y, end_y + 1)]
+        # TODO Add colors?
+
+        #for y in range(start_y, end_y + 1):
+        #    for x in range(start_x, end_x + 1):
+        #        if self.world.get((x, y), False):
+        #            screen.addch(y - offset_y, x - offset_x, "#",
+        #                         curses.color_pair(1))
+        #        else:
+        #            screen.addch(y - offset_y, x - offset_x, ".")
+        for line_no, line in enumerate(line_of_lines):
+            screen.addstr(line_no + 1, 1, line)
         screen.refresh()
 
     def min_pos(self):
@@ -127,14 +134,17 @@ class World:
             else:
                 return 0
     def make_neigh_cache(self):
-        self.neigh_cache = [(x, y) for x in range(-1,2) for y in range(-1,2) if not (x
-                      == 0 and y == 0)]
+        self._neigh_cache = [(x, y) for x in range(-1,2) for y in range(-1,2) if not 
+                            (x == 0 and y == 0)]
+        self._makro_cell_cache = [(x, y) for x in range(-1,2) for y in
+                                 range(-1,2)]
+
 
     def calculate_neighbours(self, pos):
         """ calculate the number of neighbours of cell pos """
         neighbours = 0
         pos_x, pos_y = pos
-        for x, y in self.neigh_cache:
+        for x, y in self._neigh_cache:
             neighbours += self.world.get((pos_x + x, pos_y + y), 0)
         return neighbours
 
@@ -152,15 +162,14 @@ class World:
 
     def update_neighbours(self, new_world, pos, updated_cells):
         """Update the cells in new_world around cell in position pos"""
-        for x in range(-1, 2):
-            for y in range(-1, 2):
-                if (pos[0] + x, pos[1] + y) in updated_cells:
-                    # Cell already updated, continue
-                    continue
-                else:
-                    # Cell not updated yet, updating
-                    new_world = self.update_cell(new_world, (pos[0] + x, pos[1] + y))
-                    updated_cells.add((pos[0] + x, pos[1] + y))
+        for x, y in self._makro_cell_cache:
+            if (pos[0] + x, pos[1] + y) in updated_cells:
+                # Cell already updated, continue
+                continue
+            else:
+                # Cell not updated yet, updating
+                new_world = self.update_cell(new_world, (pos[0] + x, pos[1] + y))
+                updated_cells.add((pos[0] + x, pos[1] + y))
         return new_world, updated_cells
 
     def update(self):
