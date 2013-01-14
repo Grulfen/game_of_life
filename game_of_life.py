@@ -5,8 +5,6 @@ import time
 import random
 import signal
 import sys
-from collections import defaultdict
-
 
 def signal_handler(signal, frame):
     """ Make Ctrl-c exit close curses window """
@@ -27,7 +25,7 @@ class World:
 
     def zero(self):
         """ Set the world to all zeros """
-        world = defaultdict(lambda: 0)
+        world = {}
         self.world = world
 
     def random(self, num):
@@ -168,10 +166,9 @@ class World:
 
     def update(self):
         """ Update the current world one step """
-        new_world = defaultdict(lambda: 0)
+        new_world = {}
         updated_cells = set() 
-        for pos in list(self.world.keys()):
-            cell = self.world[pos]
+        for pos, cell in self.world.items():
             new_world, updated_cells = self.update_neighbours(new_world, pos,
                                                               updated_cells)
         self.world = new_world
