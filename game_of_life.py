@@ -8,7 +8,6 @@ import sys
 
 def signal_handler(signal, frame):
     """ Make Ctrl-c exit close curses window """
-    #logging.info("Caught SIGINT, closing")
     curses.endwin()
     sys.exit(0)
 
@@ -16,7 +15,6 @@ def signal_handler(signal, frame):
 class World:
     """ World class """
     def __init__(self, size_x=10, size_y=10):
-        #logging.info("Instantianting World")
         self.size_y = size_y
         self.size_x = size_x
         self.make_neigh_cache()
@@ -29,9 +27,6 @@ class World:
         self.world = world
 
     def random(self, num):
-        #logging.info(
-        #    "In World.random: num={0}, size_x={1}, size_y={2}".format(
-        #        num, self.size_x, self.size_y))
         self.zero()
         for i in range(num):
             x = random.randint(0, self.size_x)
@@ -50,7 +45,7 @@ class World:
             end_x, end_y = self.max_pos()
         for y in range(start_y, end_y + 1):
             for x in range(start_x, end_x + 1):
-                if self.world[(x, y)]:
+                if self.world.get((x, y), False):
                     print("#", end="")
                 else:
                     print("_", end="")
@@ -62,18 +57,10 @@ class World:
         end_x, end_y = end_pos
         offset_x = start_x - 1
         offset_y = start_y - 1
-        line_of_lines = [''.join(['#' if self.world[(x,y)] else '-' 
+        line_of_lines = [''.join(['#' if self.world.get((x,y), False) else '-' 
                                   for x in range(start_x, end_x + 1) 
                                  ]) for y in range(start_y, end_y + 1)]
         # TODO Add colors?
-
-        #for y in range(start_y, end_y + 1):
-        #    for x in range(start_x, end_x + 1):
-        #        if self.world.get((x, y), False):
-        #            screen.addch(y - offset_y, x - offset_x, "#",
-        #                         curses.color_pair(1))
-        #        else:
-        #            screen.addch(y - offset_y, x - offset_x, ".")
         for line_no, line in enumerate(line_of_lines):
             screen.addstr(line_no + 1, 1, line)
         screen.refresh()
@@ -138,16 +125,13 @@ class World:
         neighbours = 0
         pos_x, pos_y = pos
         for x, y in self._neigh_cache:
-            neighbours += self.world[(pos_x + x, pos_y + y)]
+            neighbours += self.world.get((pos_x + x, pos_y + y), 0)
         return neighbours
 
     def update_cell(self, new_world, pos):
         """ Update the cell at position pos """
-        #logging.info("In World.update_cell: updating cell ({0}, {1})".format(
-        #    pos[0], pos[1]
-        #))
         neighbours = self.calculate_neighbours(pos)
-        new_cell = self._new_cell(self.world[(pos[0], pos[1])], neighbours)
+        new_cell = self._new_cell(self.world.get((pos[0], pos[1]), 0), neighbours)
         if new_cell == 1:
             new_world[(pos)] = 1
         return new_world
@@ -177,7 +161,7 @@ class World:
         string = ""
         for y in range(self.size_y):
             for x in range(self.size_x):
-                if self.world[(x, y)]:
+                if self.world.get((x, y), False):
                     string += "#"
                 else:
                     string += "-"
@@ -239,7 +223,6 @@ class Game:
             r: ask user how many generations to run and then run them
         """
         answer = self.screen.getch()
-        #logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
         if answer == ord('w') or answer == curses.KEY_UP:
             # Move world down
             self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
@@ -275,15 +258,11 @@ class Game:
 
         elif answer == ord(" "):
             # Update world
-            #logging.info("In Game.prompt: Updating world one generation")
             self.world.update()
             self.print_world()
 
         elif answer == ord("q"):
             # quit game
-            #logging.info(
-            #    "In Game.prompt: got 'q': game is quitting. World = {0}".format(
-            #        self.world.world))
             self.exit("Quitting", 0)
 
         else:
@@ -313,12 +292,10 @@ class Game:
 
     def animate(self, steps, dt=0.2):
         """ Update and print the screen 'step' times"""
-        #logging.info("Started animation")
         for i in range(steps):
             self.world.update()
             self.print_world()
             time.sleep(dt)
-        #logging.info("Animation finished")
 
 
 signal.signal(signal.SIGINT, signal_handler)
