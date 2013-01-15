@@ -62,7 +62,6 @@ class World:
                                  ]) for y in range(start_y, end_y + 1)]
         # TODO Add colors?
         for line_no, line in enumerate(list_of_lines):
-        for line_no, line in enumerate(line_of_lines):
             screen.addstr(line_no + 1, 1, line)
         screen.refresh()
 
@@ -210,7 +209,8 @@ class Game:
     def ask_user(self, question):
         """ Ask the users a question, return answer as string """
         q_size = len(question)
-        self.screen.addstr(self.size_y // 2, self.size_x // 2 - q_size // 2, question + ' ')
+        self.screen.addstr(self.size_y // 2, self.size_x // 2 - q_size // 2,
+                           question + ' ', curses.color_pair(1))
         answer = self.screen.getstr().decode("UTF-8")
         return answer
 
