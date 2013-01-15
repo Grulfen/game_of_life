@@ -58,7 +58,7 @@ class World:
         end_x, end_y = end_pos
         offset_x = start_x - 1
         offset_y = start_y - 1
-        line_of_lines = [''.join(['#' if self.world.get((x,y), False) else '-' 
+        list_of_lines = [''.join(['#' if self.world.get((x,y), False) else ',' 
                                   for x in range(start_x, end_x + 1) 
                                  ]) for y in range(start_y, end_y + 1)]
         # TODO Add colors?
@@ -70,7 +70,7 @@ class World:
         #                         curses.color_pair(1))
         #        else:
         #            screen.addch(y - offset_y, x - offset_x, ".")
-        for line_no, line in enumerate(line_of_lines):
+        for line_no, line in enumerate(list_of_lines):
             screen.addstr(line_no + 1, 1, line)
         screen.refresh()
 
@@ -265,7 +265,7 @@ class Game:
             except ValueError:
                 self.ask_user("Enter integer please")
                 return
-            self.animate(num)
+            self.animate(num, 0.001)
 
         elif answer == ord(" "):
             # Update world
