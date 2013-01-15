@@ -6,7 +6,6 @@ import random
 import signal
 import sys
 
-
 def signal_handler(signal, frame):
     """ Make Ctrl-c exit close curses window """
     curses.endwin()
@@ -62,15 +61,8 @@ class World:
                                   for x in range(start_x, end_x + 1) 
                                  ]) for y in range(start_y, end_y + 1)]
         # TODO Add colors?
-
-        #for y in range(start_y, end_y + 1):
-        #    for x in range(start_x, end_x + 1):
-        #        if self.world.get((x, y), False):
-        #            screen.addch(y - offset_y, x - offset_x, "#",
-        #                         curses.color_pair(1))
-        #        else:
-        #            screen.addch(y - offset_y, x - offset_x, ".")
         for line_no, line in enumerate(list_of_lines):
+        for line_no, line in enumerate(line_of_lines):
             screen.addstr(line_no + 1, 1, line)
         screen.refresh()
 
@@ -140,8 +132,7 @@ class World:
     def update_cell(self, new_world, pos):
         """ Update the cell at position pos """
         neighbours = self.calculate_neighbours(pos)
-        new_cell = self._new_cell(self.world.get((pos[0], pos[1]),
-                                                 0), neighbours)
+        new_cell = self._new_cell(self.world.get((pos[0], pos[1]), 0), neighbours)
         if new_cell == 1:
             new_world[(pos)] = 1
         return new_world
@@ -233,7 +224,6 @@ class Game:
             r: ask user how many generations to run and then run them
         """
         answer = self.screen.getch()
-        #logging.debug("Got char %d, symbol %c" % (answer, chr(answer)))
         if answer == ord('w') or answer == curses.KEY_UP:
             # Move world down
             self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)

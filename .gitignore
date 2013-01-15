@@ -6,3 +6,7 @@
 # Logs #
 ########
 *.log
+
+# Performance profiles #
+########################
+*.profile
