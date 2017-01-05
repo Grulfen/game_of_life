@@ -1,12 +1,12 @@
-# game_of_life.py
-# Conway's game of life
+""" Conways game of life in python """
 import curses
 import time
 import random
 import signal
 import sys
 
-def signal_handler(signal, frame):
+
+def signal_handler(_sig, _frame):
     """ Make Ctrl-c exit close curses window """
     curses.endwin()
     sys.exit(0)
@@ -18,22 +18,23 @@ class World:
         self.size_y = size_y
         self.size_x = size_x
         self.make_neigh_cache()
-        self.zero()
+        self.world = self.zero()
         self.random(int(size_x * size_y * 1 / 3))
 
-    def zero(self):
+    @staticmethod
+    def zero():
         """ Set the world to all zeros """
-        world = {}
-        self.world = world
+        return {}
 
     def random(self, num):
+        """ Create @num number of alive cells """
         self.zero()
-        for i in range(num):
+        for _ in range(num):
             x = random.randint(0, self.size_x)
             y = random.randint(0, self.size_y)
             self.world[(x, y)] = 1
 
-    def print_screen(self, world=False, start_pos=None, end_pos=None):
+    def print_screen(self, start_pos=None, end_pos=None):
         """Print world to screen"""
         if start_pos and end_pos:
             # Print world from start_pos to end_pos
@@ -55,11 +56,11 @@ class World:
         """Print the world from start_pos to end_pos on ncurses screen"""
         start_x, start_y = start_pos
         end_x, end_y = end_pos
-        offset_x = start_x - 1
-        offset_y = start_y - 1
-        list_of_lines = [''.join(['#' if self.world.get((x,y), False) else ',' 
-                                  for x in range(start_x, end_x + 1) 
-                                 ]) for y in range(start_y, end_y + 1)]
+        # TODO: Rewrite this
+        list_of_lines = [''.join(
+            ['#' if self.world.get((x, y), False) else ','
+             for x in range(start_x, end_x + 1)])
+                         for y in range(start_y, end_y + 1)]
         # TODO Add colors?
         for line_no, line in enumerate(list_of_lines):
             screen.addstr(line_no + 1, 1, line)
@@ -99,7 +100,8 @@ class World:
                     downmost = y
         return (rightmost, downmost)
 
-    def _new_cell(self, cell, neighbours):
+    @staticmethod
+    def _new_cell(cell, neighbours):
         """Returns the new cell based on how many alive neighbours there is"""
         if cell == 1:
             if neighbours < 2:
@@ -113,12 +115,17 @@ class World:
                 return 1
             else:
                 return 0
-    def make_neigh_cache(self):
-        self._neigh_cache = [(x, y) for x in range(-1,2) for y in range(-1,2) if not 
-                            (x == 0 and y == 0)]
-        self._makro_cell_cache = [(x, y) for x in range(-1,2) for y in
-                                 range(-1,2)]
 
+    def make_neigh_cache(self):
+        """ Create lists of relative positions of neighbours and
+            cells in a 3x3 block """
+        self._neigh_cache = [(x, y)
+                             for x in range(-1, 2)
+                             for y in range(-1, 2)
+                             if not (x == 0 and y == 0)]
+        self._makro_cell_cache = [(x, y)
+                                  for x in range(-1, 2)
+                                  for y in range(-1, 2)]
 
     def calculate_neighbours(self, pos):
         """ calculate the number of neighbours of cell pos """
@@ -131,7 +138,8 @@ class World:
     def update_cell(self, new_world, pos):
         """ Update the cell at position pos """
         neighbours = self.calculate_neighbours(pos)
-        new_cell = self._new_cell(self.world.get((pos[0], pos[1]), 0), neighbours)
+        new_cell = self._new_cell(self.world.get((pos[0], pos[1]), 0),
+                                  neighbours)
         if new_cell == 1:
             new_world[(pos)] = 1
         return new_world
@@ -144,15 +152,16 @@ class World:
                 continue
             else:
                 # Cell not updated yet, updating
-                new_world = self.update_cell(new_world, (pos[0] + x, pos[1] + y))
+                new_world = self.update_cell(new_world,
+                                             (pos[0] + x, pos[1] + y))
                 updated_cells.add((pos[0] + x, pos[1] + y))
         return new_world, updated_cells
 
     def update(self):
         """ Update the current world one step """
         new_world = {}
-        updated_cells = set() 
-        for pos, cell in self.world.items():
+        updated_cells = set()
+        for pos, _cell in self.world.items():
             new_world, updated_cells = self.update_neighbours(new_world, pos,
                                                               updated_cells)
         self.world = new_world
@@ -198,7 +207,7 @@ class Game:
             # Get maximum size of screen
             size_y_max, size_x_max = self.screen.getmaxyx()
             # Need space for border
-            self.size_y, self.size_x = size_y_max - 3 , size_x_max - 3
+            self.size_y, self.size_x = size_y_max - 3, size_x_max - 3
 
         self.screen.border(0)
         curses.noecho()
@@ -270,6 +279,7 @@ class Game:
             self.prompt()
 
     def print_world(self):
+        """ print the world to curses or as ascii """
         if self.mode == "curses":
             self.world.print_curses(self.screen, self.top_corner,
                                     self.bottom_corner)
@@ -284,19 +294,20 @@ class Game:
             curses.endwin()
 
     def exit(self, msg=None, status=0):
+        """ Exit game of life """
         self.kill_screen()
         if msg:
             print(msg)
-        if type(status) != type(int):
+        if not isinstance(status, int):
             status = 0
         sys.exit(status)
 
-    def animate(self, steps, dt=0.2):
+    def animate(self, steps, timestep=0.2):
         """ Update and print the screen 'step' times"""
-        for i in range(steps):
+        for _ in range(steps):
             self.world.update()
             self.print_world()
-            time.sleep(dt)
+            time.sleep(timestep)
 
 
 signal.signal(signal.SIGINT, signal_handler)
