@@ -5,12 +5,20 @@ import random
 import signal
 import sys
 
+# pylint: disable=unused-import
+from typing import Dict, Tuple, NewType, Any, Set
+
+# pylint: disable=invalid-name
+Pos = Tuple[int, int]
+
 
 def signal_handler(_sig, _frame):
     """ Make Ctrl-c exit close curses window """
     curses.endwin()
     sys.exit(0)
 
+
+# TODO: Separate visualisation from World class
 
 class World:
     """ World class """
@@ -23,10 +31,12 @@ class World:
 
     @staticmethod
     def zero():
+        # type: () -> Dict[Pos, int]
         """ Set the world to all zeros """
         return {}
 
     def random(self, num):
+        # type: (int) -> None
         """ Create @num number of alive cells """
         self.zero()
         for _ in range(num):
@@ -35,6 +45,7 @@ class World:
             self.world[(x, y)] = 1
 
     def print_screen(self, start_pos=None, end_pos=None):
+        # type: (Pos, Pos) -> None
         """Print world to screen"""
         if start_pos and end_pos:
             # Print world from start_pos to end_pos
@@ -44,6 +55,7 @@ class World:
             # No positions specified. Print the whole world
             start_x, start_y = self.min_pos()
             end_x, end_y = self.max_pos()
+
         for y in range(start_y, end_y + 1):
             for x in range(start_x, end_x + 1):
                 if self.world.get((x, y), False):
@@ -53,6 +65,7 @@ class World:
             print()
 
     def print_curses(self, screen, start_pos, end_pos):
+        # type: (Any, Pos, Pos) -> None
         """Print the world from start_pos to end_pos on ncurses screen"""
         start_x, start_y = start_pos
         end_x, end_y = end_pos
@@ -67,6 +80,7 @@ class World:
         screen.refresh()
 
     def min_pos(self):
+        # type: () -> Pos
         """ Return the top, left position with alive cell"""
         cells = list(self.world.keys())
         if not cells:
@@ -84,6 +98,7 @@ class World:
         return (leftmost, upmost)
 
     def max_pos(self):
+        # type: () -> Pos
         """ Return the bottom, right position with alive cell"""
         cells = list(self.world.keys())
         if not cells:
@@ -102,6 +117,7 @@ class World:
 
     @staticmethod
     def _new_cell(cell, neighbours):
+        # type: (int, int) -> int
         """Returns the new cell based on how many alive neighbours there is"""
         if cell == 1:
             if neighbours < 2:
@@ -117,6 +133,7 @@ class World:
                 return 0
 
     def make_neigh_cache(self):
+        # type: () -> None
         """ Create lists of relative positions of neighbours and
             cells in a 3x3 block """
         self._neigh_cache = [(x, y)
@@ -128,6 +145,7 @@ class World:
                                   for y in range(-1, 2)]
 
     def calculate_neighbours(self, pos):
+        # type: (Pos) -> int
         """ calculate the number of neighbours of cell pos """
         neighbours = 0
         pos_x, pos_y = pos
@@ -136,6 +154,7 @@ class World:
         return neighbours
 
     def update_cell(self, new_world, pos):
+        # type: (Dict[Pos, int], Pos) -> Dict[Pos, int]
         """ Update the cell at position pos """
         neighbours = self.calculate_neighbours(pos)
         new_cell = self._new_cell(self.world.get((pos[0], pos[1]), 0),
@@ -145,6 +164,7 @@ class World:
         return new_world
 
     def update_neighbours(self, new_world, pos, updated_cells):
+        # type: (Dict[Pos, int], Pos, Set[Pos]) -> Tuple[Dict[Pos, int], Set[Pos]]
         """Update the cells in new_world around cell in position pos"""
         for x, y in self._makro_cell_cache:
             if (pos[0] + x, pos[1] + y) in updated_cells:
@@ -158,15 +178,17 @@ class World:
         return new_world, updated_cells
 
     def update(self):
+        # type: () -> None
         """ Update the current world one step """
-        new_world = {}
-        updated_cells = set()
+        new_world = {}  # type: Dict[Pos, int]
+        updated_cells = set()  # type: Set[Pos]
         for pos, _cell in self.world.items():
             new_world, updated_cells = self.update_neighbours(new_world, pos,
                                                               updated_cells)
         self.world = new_world
 
     def __str__(self):
+        # type: () -> str
         string = ""
         for y in range(self.size_y):
             for x in range(self.size_x):
