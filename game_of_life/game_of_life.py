@@ -18,8 +18,6 @@ def signal_handler(_sig, _frame):
     sys.exit(0)
 
 
-# TODO: Separate visualisation from World class
-
 class World:
     """ World class """
     def __init__(self, size_x=10, size_y=10):
@@ -43,41 +41,6 @@ class World:
             x = random.randint(0, self.size_x)
             y = random.randint(0, self.size_y)
             self.world[(x, y)] = 1
-
-    def print_screen(self, start_pos=None, end_pos=None):
-        # type: (Pos, Pos) -> None
-        """Print world to screen"""
-        if start_pos and end_pos:
-            # Print world from start_pos to end_pos
-            start_x, start_y = start_pos
-            end_x, end_y = end_pos
-        else:
-            # No positions specified. Print the whole world
-            start_x, start_y = self.min_pos()
-            end_x, end_y = self.max_pos()
-
-        for y in range(start_y, end_y + 1):
-            for x in range(start_x, end_x + 1):
-                if self.world.get((x, y), False):
-                    print("#", end="")
-                else:
-                    print("_", end="")
-            print()
-
-    def print_curses(self, screen, start_pos, end_pos):
-        # type: (Any, Pos, Pos) -> None
-        """Print the world from start_pos to end_pos on ncurses screen"""
-        start_x, start_y = start_pos
-        end_x, end_y = end_pos
-        # TODO: Rewrite this
-        list_of_lines = [''.join(
-            ['#' if self.world.get((x, y), False) else ','
-             for x in range(start_x, end_x + 1)])
-                         for y in range(start_y, end_y + 1)]
-        # TODO Add colors?
-        for line_no, line in enumerate(list_of_lines):
-            screen.addstr(line_no + 1, 1, line)
-        screen.refresh()
 
     def min_pos(self):
         # type: () -> Pos
@@ -200,8 +163,46 @@ class World:
         return string
 
 
+def print_screen(world, start_pos=None, end_pos=None):
+    # type: (World, Pos, Pos) -> None
+    """Print @world between @start_pos and @end_pos to stdout"""
+    if start_pos and end_pos:
+        # Print world from start_pos to end_pos
+        start_x, start_y = start_pos
+        end_x, end_y = end_pos
+    else:
+        # No positions specified. Print the whole world
+        start_x, start_y = world.min_pos()
+        end_x, end_y = world.max_pos()
+
+    for y in range(start_y, end_y + 1):
+        for x in range(start_x, end_x + 1):
+            if world.world.get((x, y), False):
+                print("#", end="")
+            else:
+                print("_", end="")
+        print()
+
+
+def print_curses(world, screen, start_pos, end_pos):
+    # type: (World, Any, Pos, Pos) -> None
+    """Print the @world from @start_pos to @end_pos on ncurses @screen"""
+    start_x, start_y = start_pos
+    end_x, end_y = end_pos
+    # TODO: Rewrite this
+    list_of_lines = [''.join(
+        ['#' if world.world.get((x, y), False) else ','
+         for x in range(start_x, end_x + 1)])
+                     for y in range(start_y, end_y + 1)]
+    # TODO Add colors?
+    for line_no, line in enumerate(list_of_lines):
+        screen.addstr(line_no + 1, 1, line)
+    screen.refresh()
+
+
 class Game:
-    def __init__(self, start=False, mode="screen", size_x=20, size_y=20,
+    """ Class handling the user interface """
+    def __init__(self, mode="screen", size_x=20, size_y=20,
                  max_size=False):
 
         self.size_x = size_x
@@ -303,10 +304,11 @@ class Game:
     def print_world(self):
         """ print the world to curses or as ascii """
         if self.mode == "curses":
-            self.world.print_curses(self.screen, self.top_corner,
-                                    self.bottom_corner)
+            print_curses(self.world, self.screen,
+                         self.top_corner,
+                         self.bottom_corner)
         elif self.mode == "screen":
-            self.world.print_screen()
+            print_screen(self.world)
         else:
             pass
 
