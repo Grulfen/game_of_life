@@ -129,9 +129,9 @@ class World:
         """ Create a live cell at @pos """
         self.world.add(pos)
 
-    def str_section(self, top_left=None, bottom_right=None):
-        # type: (World, Pos, Pos) -> str
-        """Return @world between @top_left and @bottom_right as string"""
+    def lines(self, top_left=None, bottom_right=None):
+        # type: (World, Pos, Pos) -> List[str]
+        """Return @world between @top_left and @bottom_right as list of strings """
         if top_left is None:
             top_left = self.min_pos()
 
@@ -140,21 +140,21 @@ class World:
 
         world_lines = []
         if not self.world:
-            return ""
+            return []
 
-        for y in range(top_left[0], bottom_right[0] + 1):
+        for y in range(top_left[1], bottom_right[1] + 1):
             string = ""
-            for x in range(top_left[1], bottom_right[1] + 1):
+            for x in range(top_left[0], bottom_right[0] + 1):
                 if (x, y) in self.world:
                     string += ALIVE_SYMBOL
                 else:
                     string += DEAD_SYMBOL
             world_lines.append(string)
-        return "\n".join(world_lines)
+        return world_lines
 
     def __str__(self):
         # type: () -> str
-        return self.str_section()
+        return "\n".join(self.lines())
 
     def __getitem__(self, pos):
         # type: (Pos) -> int
@@ -167,19 +167,15 @@ class World:
 def print_screen(world, start_pos=None, end_pos=None):
     # type: (World, Pos, Pos) -> None
     """Print @world between @start_pos and @end_pos to stdout"""
-    print(world.str_section(start_pos, end_pos))
+    print("\n".join(world.lines(start_pos, end_pos)))
 
 
 def print_curses(world, screen, start_pos, end_pos):
     # type: (World, Any, Pos, Pos) -> None
     """Print the @world from @start_pos to @end_pos on ncurses @screen"""
-    start_x, start_y = start_pos
-    end_x, end_y = end_pos
-    # TODO: Rewrite this
-    list_of_lines = [''.join(
-        ['#' if world[(x, y)] else ','
-         for x in range(start_x, end_x + 1)])
-                     for y in range(start_y, end_y + 1)]
+
+    list_of_lines = world.lines(start_pos, end_pos)
+
     # TODO Add colors?
     for line_no, line in enumerate(list_of_lines):
         screen.addstr(line_no + 1, 1, line)

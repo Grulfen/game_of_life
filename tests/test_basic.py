@@ -80,10 +80,32 @@ class TestPrintWorld:
         world.set_cell((1, 1))
         gol.print_screen(world, (0, 0), (2, 2))
         out, _ = capsys.readouterr()
+        # pylint: disable=unused-format-string-argument
         string = "\n".join([
-            gol.DEAD_SYMBOL * 3,
-            gol.DEAD_SYMBOL + gol.ALIVE_SYMBOL + gol.DEAD_SYMBOL,
-            gol.DEAD_SYMBOL * 3])
+            "{d}{d}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
+            "{d}{a}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
+            "{d}{d}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
+            ])
+        assert out == string + "\n"
+
+    def test_print_screen_3x4_world(self, capsys):
+        """
+        --x-
+        -x-x
+        x---
+
+        """
+        world = gol.World(randomize=False)
+        positions = [(0, 2), (1, 1), (2, 0), (3, 1)]
+        for pos in positions:
+            world.set_cell(pos)
+        gol.print_screen(world)
+        out, _ = capsys.readouterr()
+        string = "\n".join([
+            "{d}{d}{a}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
+            "{d}{a}{d}{a}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
+            "{a}{d}{d}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
+            ])
         assert out == string + "\n"
 
 
