@@ -1,7 +1,9 @@
 """ Tests for game of life """
-from .context import game_of_life as gol
 from itertools import combinations
+
 import pytest
+
+from .context import game_of_life as gol
 
 
 NEIGHBOURS = [(x, y)
@@ -10,10 +12,21 @@ NEIGHBOURS = [(x, y)
               if not (x == 1 and y == 1)]
 
 
-def test_new_world_is_empty():
-    world = gol.World(randomize=False)
-    assert len(world) == 0
+class TestWorldInit:
+    def test_new_world_is_empty(self):
+        world = gol.World(randomize=False)
+        assert len(world) == 0
 
+    @pytest.mark.parametrize("num", range(16))
+    def test_random_init_contains_correct_number_of_alive_cells(self, num):
+        world = gol.World(randomize=False, size_x=4, size_y=4)
+        world.randomize(num)
+        assert len(world) == num
+
+    def test_random_init_with_too_many_cells_raises_exception(self):
+        world = gol.World(randomize=False, size_x=3, size_y=3)
+        with pytest.raises(ValueError):
+            world.randomize(3 * 3 + 1)
 
 class TestUpdateCells:
 
@@ -60,7 +73,7 @@ class TestUpdateCells:
         ----------------------+------------------------
         0 neighbours -> dies  |  1 neighbour -> dies
         ---    ???            |  ---    ???
-        -x- -> ?-?            |  -x- -> ?-?
+        -x- -> ?-?            |  -x- -> ?-?(
         ---    ???            |  --x    ???
                               |
         ----------------------+------------------------
