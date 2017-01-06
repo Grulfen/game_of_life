@@ -60,7 +60,7 @@ class World:
     def max_pos(self):
         # type: () -> Pos
         """ Return the bottom, right position with alive cell"""
-        return self._find_corner(max, (10, 10))
+        return self._find_corner(max, (0, 0))
 
     @staticmethod
     def _new_cell(cell, neighbours):
