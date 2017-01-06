@@ -10,3 +10,15 @@
 # Performance profiles #
 ########################
 *.profile
+
+# Coverage profiles #
+#####################
+*.coverage
+
+# Cache #
+#########
+*.cache
+
+# vim session files #
+#$###################
+Session.vim
