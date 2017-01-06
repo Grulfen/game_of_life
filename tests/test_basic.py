@@ -55,6 +55,37 @@ class TestPrintWorld:
         out, _ = capsys.readouterr()
         assert out == "\n"
 
+    def test_print_screen_empty_world(self, capsys):
+        world = gol.World(randomize=False, size_x=3, size_y=3)
+        gol.print_screen(world)
+        out, _ = capsys.readouterr()
+        assert out == "\n"
+
+    def test_print_one_cell_world(self, capsys):
+        world = gol.World(randomize=False, size_x=3, size_y=3)
+        world.set_cell((1, 1))
+        print(world)
+        out, _ = capsys.readouterr()
+        assert out == gol.ALIVE_SYMBOL + "\n"
+
+    def test_print_screen_one_cell_world(self, capsys):
+        world = gol.World(randomize=False, size_x=3, size_y=3)
+        world.set_cell((1, 1))
+        gol.print_screen(world)
+        out, _ = capsys.readouterr()
+        assert out == gol.ALIVE_SYMBOL + "\n"
+
+    def test_print_screen_one_cell_world_with_surroundings(self, capsys):
+        world = gol.World(randomize=False, size_x=3, size_y=3)
+        world.set_cell((1, 1))
+        gol.print_screen(world, (0, 0), (2, 2))
+        out, _ = capsys.readouterr()
+        string = "\n".join([
+            gol.DEAD_SYMBOL * 3,
+            gol.DEAD_SYMBOL + gol.ALIVE_SYMBOL + gol.DEAD_SYMBOL,
+            gol.DEAD_SYMBOL * 3])
+        assert out == string + "\n"
+
 
 class TestWorldInit:
     def test_new_world_is_empty(self):
