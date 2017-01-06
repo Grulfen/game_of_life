@@ -12,6 +12,50 @@ NEIGHBOURS = [(x, y)
               if not (x == 1 and y == 1)]
 
 
+class TestWorldPositions:
+    def test_min_pos_empty_world_is_0_0(self):
+        world = gol.World(randomize=False)
+        assert world.min_pos() == (0, 0)
+
+
+    def test_max_pos_empty_world_is_0_0(self):
+        world = gol.World(randomize=False)
+        assert world.max_pos() == (0, 0)
+
+    @pytest.mark.parametrize("pos",
+                             [(1, 4),
+                              (-4, -15),
+                              (-54, 1000),
+                              (74, -125)])
+    def test_one_cell_is_both_min_and_max(self, pos):
+        world = gol.World(randomize=False)
+        world.set_cell(pos)
+        assert world.max_pos() == pos and world.min_pos() == pos
+
+    def test_bounding_rectangle(self):
+        """
+        Alive cells    Bounding rectangle
+        --x-            X+++
+        ---x        ->  +..+
+        x---            +..+
+        --x-            +++X
+
+        """
+        world = gol.World(randomize=False)
+        positions = [(0, 2), (2, 0), (3, 1), (2, 3)]
+        for pos in positions:
+            world.set_cell(pos)
+        assert world.min_pos() == (0, 0) and world.max_pos() == (3, 3)
+
+
+class TestPrintWorld:
+    def test_print_empty_world(self, capsys):
+        world = gol.World(randomize=False, size_x=3, size_y=3)
+        print(world)
+        out, _ = capsys.readouterr()
+        assert out == "\n"
+
+
 class TestWorldInit:
     def test_new_world_is_empty(self):
         world = gol.World(randomize=False)
