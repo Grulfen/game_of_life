@@ -6,7 +6,7 @@ import signal
 import sys
 
 # pylint: disable=unused-import
-from typing import Dict, Tuple, NewType, Any, Set
+from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterator
 
 # pylint: disable=invalid-name
 Pos = Tuple[int, int]
@@ -21,74 +21,52 @@ def signal_handler(_sig, _frame):
 class World:
     """ World class """
     def __init__(self, size_x=10, size_y=10, randomize=True):
+        # type : (int, int, Bool) -> None
         self.size_y = size_y
         self.size_x = size_x
         self.make_neigh_cache()
-        self.world = {}
+        self.world = set()  # type: Set[Pos]
         if randomize:
             self.random(int(size_x * size_y * 1 / 3))
 
     def random(self, num):
         # type: (int) -> None
         """ Create @num number of alive cells """
-        self.world = {}
+        self.world = set()
         for _ in range(num):
             x = random.randint(0, self.size_x)
             y = random.randint(0, self.size_y)
-            self.world[(x, y)] = 1
+            self.world.add((x, y))
+
+    def _find_corner(self, func, empty_pos):
+        # type: (Callable[[Iterator[int]], int], Pos) -> Pos
+        """ Helper function to find corners of bounding rectangle of alive cells """
+        if not self.world:
+            # World empty
+            return empty_pos
+        else:
+            x = func(cell[0] for cell in self.world)
+            y = func(cell[1] for cell in self.world)
+        return (x, y)
 
     def min_pos(self):
         # type: () -> Pos
-        """ Return the top, left position with alive cell"""
-        cells = list(self.world.keys())
-        if not cells:
-            # World empty
-            return (0, 0)
-        else:
-            leftmost = cells[0][0]
-            upmost = cells[0][1]
-            for cell in cells:
-                x, y = cell
-                if x < leftmost:
-                    leftmost = x
-                if y < upmost:
-                    upmost = y
-        return (leftmost, upmost)
+        """ Return the top left position of the bounding rectangle of all alive cells """
+        return self._find_corner(min, (0, 0))
 
     def max_pos(self):
         # type: () -> Pos
         """ Return the bottom, right position with alive cell"""
-        cells = list(self.world.keys())
-        if not cells:
-            # World empty
-            return (10, 10)
-        else:
-            rightmost = cells[0][0]
-            downmost = cells[0][1]
-            for cell in cells:
-                x, y = cell
-                if x > rightmost:
-                    rightmost = x
-                if y > downmost:
-                    downmost = y
-        return (rightmost, downmost)
+        return self._find_corner(max, (10, 10))
 
     @staticmethod
     def _new_cell(cell, neighbours):
-        # type: (int, int) -> int
+        # type: (bool, int) -> bool
         """Returns the new cell based on how many alive neighbours there is"""
-        if cell == 1:
-            if neighbours < 2:
-                return 0
-            elif neighbours < 4:
-                return 1
-            else:
-                return 0
-        if cell == 0:
-            if neighbours == 3:
-                return 1
-            else:
-                return 0
+        if cell:
+            return 2 <= neighbours < 4
+        else:
+            return neighbours == 3
 
     def make_neigh_cache(self):
         # type: () -> None
@@ -109,20 +87,20 @@ class World:
         x, y = pos
         for d_x, d_y in self._neigh_cache:
             neighbour_pos = (x + d_x, y + d_y)
-            neighbours += self.world.get(neighbour_pos, 0)
+            neighbours += 1 if neighbour_pos in self.world else 0
         return neighbours
 
     def update_cell(self, new_world, pos):
-        # type: (Dict[Pos, int], Pos) -> Dict[Pos, int]
+        # type: (Set[Pos], Pos) -> Set[Pos]
         """ Update the cell at position pos """
         neighbours = self.calculate_neighbours(pos)
-        new_cell = self._new_cell(self.world.get(pos, 0), neighbours)
-        if new_cell == 1:
-            new_world[pos] = 1
+        new_cell = self._new_cell(pos in self.world, neighbours)
+        if new_cell:
+            new_world.add(pos)
         return new_world
 
     def update_neighbours(self, new_world, pos, updated_cells):
-        # type: (Dict[Pos, int], Pos, Set[Pos]) -> Tuple[Dict[Pos, int], Set[Pos]]
+        # type: (Set[Pos], Pos, Set[Pos]) -> Tuple[Set[Pos], Set[Pos]]
         """Update the cells in new_world around cell in position pos"""
         for x, y in self._makro_cell_cache:
             if (pos[0] + x, pos[1] + y) in updated_cells:
@@ -137,7 +115,7 @@ class World:
     def update(self):
         # type: () -> None
         """ Update the current world one step """
-        new_world = {}  # type: Dict[Pos, int]
+        new_world = set()  # type: Set[Pos]
         updated_cells = set()  # type: Set[Pos]
         for pos in self.world:
             new_world, updated_cells = self.update_neighbours(new_world, pos, updated_cells)
@@ -146,14 +124,14 @@ class World:
     def set_cell(self, pos):
         """ Create a live cell at @pos """
         # type: (Pos) -> None
-        self.world[pos] = 1
+        self.world.add(pos)
 
     def __str__(self):
         # type: () -> str
         string = ""
         for y in range(self.size_y):
             for x in range(self.size_x):
-                if self.world.get((x, y), 0):
+                if (x, y) in self.world:
                     string += "#"
                 else:
                     string += "-"
@@ -162,11 +140,7 @@ class World:
 
     def __getitem__(self, pos):
         # type: (Pos) -> int
-        return self.world.get(pos, 0)
-
-    def __setitem__(self, pos, value):
-        # type: (Pos, int) -> None
-        self.world[pos] = value
+        return 1 if pos in self.world else 0
 
     def __len__(self):
         return len(self.world)
