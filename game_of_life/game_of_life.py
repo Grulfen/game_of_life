@@ -20,12 +20,13 @@ def signal_handler(_sig, _frame):
 
 class World:
     """ World class """
-    def __init__(self, size_x=10, size_y=10):
+    def __init__(self, size_x=10, size_y=10, randomize=True):
         self.size_y = size_y
         self.size_x = size_x
         self.make_neigh_cache()
         self.world = self.zero()
-        self.random(int(size_x * size_y * 1 / 3))
+        if randomize:
+            self.random(int(size_x * size_y * 1 / 3))
 
     @staticmethod
     def zero():
@@ -36,7 +37,7 @@ class World:
     def random(self, num):
         # type: (int) -> None
         """ Create @num number of alive cells """
-        self.zero()
+        self.world = {}
         for _ in range(num):
             x = random.randint(0, self.size_x)
             y = random.randint(0, self.size_y)
