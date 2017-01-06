@@ -12,6 +12,9 @@ from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterable
 # pylint: disable=invalid-name
 Pos = Tuple[int, int]
 
+DEAD_SYMBOL = '-'
+ALIVE_SYMBOL = '#'
+
 
 def signal_handler(_sig, _frame):
     """ Make Ctrl-c exit close curses window """
@@ -23,20 +26,18 @@ class World:
     """ World class """
     def __init__(self, size_x=10, size_y=10, randomize=True):
         # type : (int, int, Bool) -> None
-        self.size_y = size_y
-        self.size_x = size_x
         self.make_neigh_cache()
         self.world = set()  # type: Set[Pos]
         if randomize:
-            self.randomize(int(size_x * size_y * 1 / 3))
+            self.randomize(int(size_x * size_y * 1 / 3), size_x, size_y)
 
-    def randomize(self, num):
-        # type: (int) -> None
-        """ Create @num number of alive cells """
-        if num > self.size_x * self.size_y:
+    def randomize(self, num, size_x, size_y):
+        # type: (int, int, int) -> None
+        """ Create @num number of alive cells between (0, 0) and (size_x, size_y) """
+        if num > size_x * size_y:
             raise ValueError("Trying to add more cells than space in world")
         self.world = set()
-        all_cells = product(range(self.size_x), range(self.size_y))  # type: Iterable[Any]
+        all_cells = product(range(size_x), range(size_y))  # type: Iterable[Any]
         for cell in random.sample(list(all_cells), num):
             self.world.add(cell)
 
@@ -131,12 +132,14 @@ class World:
     def __str__(self):
         # type: () -> str
         string = ""
-        for y in range(self.size_y):
-            for x in range(self.size_x):
+        topleft = self.min_pos()
+        bottomright = self.max_pos()
+        for y in range(topleft[0], bottomright[0]):
+            for x in range(topleft[1], bottomright[1]):
                 if (x, y) in self.world:
-                    string += "#"
+                    string += ALIVE_SYMBOL
                 else:
-                    string += "-"
+                    string += DEAD_SYMBOL
             string += "\n"
         return string
 

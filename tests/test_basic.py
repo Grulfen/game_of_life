@@ -19,14 +19,14 @@ class TestWorldInit:
 
     @pytest.mark.parametrize("num", range(16))
     def test_random_init_contains_correct_number_of_alive_cells(self, num):
-        world = gol.World(randomize=False, size_x=4, size_y=4)
-        world.randomize(num)
+        world = gol.World(randomize=False)
+        world.randomize(num, size_x=4, size_y=4)
         assert len(world) == num
 
     def test_random_init_with_too_many_cells_raises_exception(self):
-        world = gol.World(randomize=False, size_x=3, size_y=3)
+        world = gol.World(randomize=False)
         with pytest.raises(ValueError):
-            world.randomize(3 * 3 + 1)
+            world.randomize(3 * 3 + 1, size_x=3, size_y=3)
 
 class TestUpdateCells:
 
