@@ -5,5 +5,5 @@ install:
     - "pip install -r requirements.txt"
     - "pip install pytest-cov"
     - "pip install coveralls"
-script: pytest --cov-report= --cov=game_of_life tests/
+script: pytest --cov-report= --cov=game_of_life/game_of_life.py tests/
 after_success: coveralls
