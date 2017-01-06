@@ -4,9 +4,10 @@ import time
 import random
 import signal
 import sys
+from itertools import product
 
 # pylint: disable=unused-import
-from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterator
+from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterable
 
 # pylint: disable=invalid-name
 Pos = Tuple[int, int]
@@ -27,19 +28,20 @@ class World:
         self.make_neigh_cache()
         self.world = set()  # type: Set[Pos]
         if randomize:
-            self.random(int(size_x * size_y * 1 / 3))
+            self.randomize(int(size_x * size_y * 1 / 3))
 
-    def random(self, num):
+    def randomize(self, num):
         # type: (int) -> None
         """ Create @num number of alive cells """
+        if num > self.size_x * self.size_y:
+            raise ValueError("Trying to add more cells than space in world")
         self.world = set()
-        for _ in range(num):
-            x = random.randint(0, self.size_x)
-            y = random.randint(0, self.size_y)
-            self.world.add((x, y))
+        all_cells = product(range(self.size_x), range(self.size_y))  # type: Iterable[Any]
+        for cell in random.sample(list(all_cells), num):
+            self.world.add(cell)
 
     def _find_corner(self, func, empty_pos):
-        # type: (Callable[[Iterator[int]], int], Pos) -> Pos
+        # type: (Callable[[Iterable[int]], int], Pos) -> Pos
         """ Helper function to find corners of bounding rectangle of alive cells """
         if not self.world:
             # World empty
@@ -122,8 +124,8 @@ class World:
         self.world = new_world
 
     def set_cell(self, pos):
-        """ Create a live cell at @pos """
         # type: (Pos) -> None
+        """ Create a live cell at @pos """
         self.world.add(pos)
 
     def __str__(self):
