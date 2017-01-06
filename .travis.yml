@@ -6,4 +6,4 @@ install:
     - "pip install pytest-cov"
     - "pip install coveralls"
 script: pytest --cov-report= --cov=game_of_life tests/
-after-sucess: coveralls
+after_success: coveralls
