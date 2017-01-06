@@ -129,19 +129,32 @@ class World:
         """ Create a live cell at @pos """
         self.world.add(pos)
 
-    def __str__(self):
-        # type: () -> str
-        string = ""
-        topleft = self.min_pos()
-        bottomright = self.max_pos()
-        for y in range(topleft[0], bottomright[0]):
-            for x in range(topleft[1], bottomright[1]):
+    def str_section(self, top_left=None, bottom_right=None):
+        # type: (World, Pos, Pos) -> str
+        """Return @world between @top_left and @bottom_right as string"""
+        if top_left is None:
+            top_left = self.min_pos()
+
+        if bottom_right is None:
+            bottom_right = self.max_pos()
+
+        world_lines = []
+        if not self.world:
+            return ""
+
+        for y in range(top_left[0], bottom_right[0] + 1):
+            string = ""
+            for x in range(top_left[1], bottom_right[1] + 1):
                 if (x, y) in self.world:
                     string += ALIVE_SYMBOL
                 else:
                     string += DEAD_SYMBOL
-            string += "\n"
-        return string
+            world_lines.append(string)
+        return "\n".join(world_lines)
+
+    def __str__(self):
+        # type: () -> str
+        return self.str_section()
 
     def __getitem__(self, pos):
         # type: (Pos) -> int
@@ -154,22 +167,7 @@ class World:
 def print_screen(world, start_pos=None, end_pos=None):
     # type: (World, Pos, Pos) -> None
     """Print @world between @start_pos and @end_pos to stdout"""
-    if start_pos and end_pos:
-        # Print world from start_pos to end_pos
-        start_x, start_y = start_pos
-        end_x, end_y = end_pos
-    else:
-        # No positions specified. Print the whole world
-        start_x, start_y = world.min_pos()
-        end_x, end_y = world.max_pos()
-
-    for y in range(start_y, end_y + 1):
-        for x in range(start_x, end_x + 1):
-            if world[(x, y)]:
-                print("#", end="")
-            else:
-                print("_", end="")
-        print()
+    print(world.str_section(start_pos, end_pos))
 
 
 def print_curses(world, screen, start_pos, end_pos):
