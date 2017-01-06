@@ -24,15 +24,9 @@ class World:
         self.size_y = size_y
         self.size_x = size_x
         self.make_neigh_cache()
-        self.world = self.zero()
+        self.world = {}
         if randomize:
             self.random(int(size_x * size_y * 1 / 3))
-
-    @staticmethod
-    def zero():
-        # type: () -> Dict[Pos, int]
-        """ Set the world to all zeros """
-        return {}
 
     def random(self, num):
         # type: (int) -> None
@@ -112,19 +106,19 @@ class World:
         # type: (Pos) -> int
         """ calculate the number of neighbours of cell pos """
         neighbours = 0
-        pos_x, pos_y = pos
-        for x, y in self._neigh_cache:
-            neighbours += self.world.get((pos_x + x, pos_y + y), 0)
+        x, y = pos
+        for d_x, d_y in self._neigh_cache:
+            neighbour_pos = (x + d_x, y + d_y)
+            neighbours += self.world.get(neighbour_pos, 0)
         return neighbours
 
     def update_cell(self, new_world, pos):
         # type: (Dict[Pos, int], Pos) -> Dict[Pos, int]
         """ Update the cell at position pos """
         neighbours = self.calculate_neighbours(pos)
-        new_cell = self._new_cell(self.world.get((pos[0], pos[1]), 0),
-                                  neighbours)
+        new_cell = self._new_cell(self.world.get(pos, 0), neighbours)
         if new_cell == 1:
-            new_world[(pos)] = 1
+            new_world[pos] = 1
         return new_world
 
     def update_neighbours(self, new_world, pos, updated_cells):
@@ -136,8 +130,7 @@ class World:
                 continue
             else:
                 # Cell not updated yet, updating
-                new_world = self.update_cell(new_world,
-                                             (pos[0] + x, pos[1] + y))
+                new_world = self.update_cell(new_world, (pos[0] + x, pos[1] + y))
                 updated_cells.add((pos[0] + x, pos[1] + y))
         return new_world, updated_cells
 
@@ -146,9 +139,8 @@ class World:
         """ Update the current world one step """
         new_world = {}  # type: Dict[Pos, int]
         updated_cells = set()  # type: Set[Pos]
-        for pos, _cell in self.world.items():
-            new_world, updated_cells = self.update_neighbours(new_world, pos,
-                                                              updated_cells)
+        for pos in self.world:
+            new_world, updated_cells = self.update_neighbours(new_world, pos, updated_cells)
         self.world = new_world
 
     def set_cell(self, pos):
@@ -161,7 +153,7 @@ class World:
         string = ""
         for y in range(self.size_y):
             for x in range(self.size_x):
-                if self.world.get((x, y), False):
+                if self.world.get((x, y), 0):
                     string += "#"
                 else:
                     string += "-"
@@ -194,7 +186,7 @@ def print_screen(world, start_pos=None, end_pos=None):
 
     for y in range(start_y, end_y + 1):
         for x in range(start_x, end_x + 1):
-            if world.world.get((x, y), False):
+            if world[(x, y)]:
                 print("#", end="")
             else:
                 print("_", end="")
@@ -208,7 +200,7 @@ def print_curses(world, screen, start_pos, end_pos):
     end_x, end_y = end_pos
     # TODO: Rewrite this
     list_of_lines = [''.join(
-        ['#' if world.world.get((x, y), False) else ','
+        ['#' if world[(x, y)] else ','
          for x in range(start_x, end_x + 1)])
                      for y in range(start_y, end_y + 1)]
     # TODO Add colors?
