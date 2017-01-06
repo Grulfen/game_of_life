@@ -151,6 +151,11 @@ class World:
                                                               updated_cells)
         self.world = new_world
 
+    def set_cell(self, pos):
+        """ Create a live cell at @pos """
+        # type: (Pos) -> None
+        self.world[pos] = 1
+
     def __str__(self):
         # type: () -> str
         string = ""
@@ -162,6 +167,17 @@ class World:
                     string += "-"
             string += "\n"
         return string
+
+    def __getitem__(self, pos):
+        # type: (Pos) -> int
+        return self.world.get(pos, 0)
+
+    def __setitem__(self, pos, value):
+        # type: (Pos, int) -> None
+        self.world[pos] = value
+
+    def __len__(self):
+        return len(self.world)
 
 
 def print_screen(world, start_pos=None, end_pos=None):
