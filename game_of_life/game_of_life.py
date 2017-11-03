@@ -8,6 +8,7 @@ from itertools import product
 
 # pylint: disable=unused-import
 from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterable
+# pylint: enable=unused-import
 
 # pylint: disable=invalid-name
 Pos = Tuple[int, int]
