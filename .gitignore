@@ -22,3 +22,7 @@
 # vim session files #
 #$###################
 Session.vim
+
+# Coverage files
+#################
+htmlcov
