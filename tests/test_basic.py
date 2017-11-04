@@ -192,3 +192,39 @@ class TestUpdateCells:
                 world.set_cell((x, y))
             world.update()
             assert world[(1, 1)] == alive
+
+
+@pytest.fixture
+def game():
+    return gol.Game(mode="screen", size_x=5, size_y=5)
+
+
+class TestGame:
+
+    def test_corners_moves_if_move_left(self, game):
+        old_top_corner = game.top_corner
+        old_bottom_corner = game.bottom_corner
+        game.move_left()
+        assert game.top_corner == (old_top_corner[0] - 1, old_top_corner[1])
+        assert game.bottom_corner == (old_bottom_corner[0] - 1, old_bottom_corner[1])
+
+    def test_corners_moves_if_move_right(self, game):
+        old_top_corner = game.top_corner
+        old_bottom_corner = game.bottom_corner
+        game.move_right()
+        assert game.top_corner == (old_top_corner[0] + 1, old_top_corner[1])
+        assert game.bottom_corner == (old_bottom_corner[0] + 1, old_bottom_corner[1])
+
+    def test_corners_moves_if_move_up(self, game):
+        old_top_corner = game.top_corner
+        old_bottom_corner = game.bottom_corner
+        game.move_up()
+        assert game.top_corner == (old_top_corner[0], old_top_corner[1] + 1)
+        assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] + 1)
+
+    def test_corners_moves_if_move_down(self, game):
+        old_top_corner = game.top_corner
+        old_bottom_corner = game.bottom_corner
+        game.move_down()
+        assert game.top_corner == (old_top_corner[0], old_top_corner[1] - 1)
+        assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] - 1)

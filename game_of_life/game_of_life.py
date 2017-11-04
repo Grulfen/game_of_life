@@ -229,8 +229,43 @@ class Game:
         answer = self.screen.getstr().decode("UTF-8")
         return answer
 
-    def prompt(self):
-        """ Wait for user input and update world:
+    def get_command_from_user_screen(self) -> int:
+        """ Get a command from user using terminal """
+        raise NotImplementedError('Prompt is not supported for \"screen\" mode worlds')
+
+    def get_command_from_user_curses(self) -> int:
+        """ Get a command from user using curses """
+        return self.screen.getch()
+
+    def get_command_from_user(self):
+        """ Get input from user """
+        if self.mode == "screen":
+            return self.get_command_from_user_screen()
+        elif self.mode == "curses":
+            return self.get_command_from_user_curses()
+
+    def move_left(self):
+        """ Move the viewing window of the world to the left """
+        self.top_corner = (self.top_corner[0] - 1, self.top_corner[1])
+        self.bottom_corner = (self.bottom_corner[0] - 1, self.bottom_corner[1])
+
+    def move_right(self):
+        """ Move the viewing window of the world to the right """
+        self.top_corner = (self.top_corner[0] + 1, self.top_corner[1])
+        self.bottom_corner = (self.bottom_corner[0] + 1, self.bottom_corner[1])
+
+    def move_up(self):
+        """ Move the viewing window of the world to the up """
+        self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
+        self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] + 1)
+
+    def move_down(self):
+        """ Move the viewing window of the world to the down """
+        self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
+        self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] - 1)
+
+    def handle_command(self, command):
+        """ Handle commands
             space: continue one generation
             w or up: move screen up
             a or left: move screen left
@@ -238,32 +273,16 @@ class Game:
             f or right: move screen right
             r: ask user how many generations to run and then run them
         """
-        answer = self.screen.getch()
-        if answer == ord('w') or answer == curses.KEY_UP:
-            # Move world down
-            self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
-            self.bottom_corner = (self.bottom_corner[0],
-                                  self.bottom_corner[1] - 1)
-            self.print_world()
-        elif answer == ord('s') or answer == curses.KEY_DOWN:
-            # Move world up
-            self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
-            self.bottom_corner = (self.bottom_corner[0],
-                                  self.bottom_corner[1] + 1)
-            self.print_world()
-        elif answer == ord('a') or answer == curses.KEY_LEFT:
-            # Move world right
-            self.top_corner = (self.top_corner[0] - 1, self.top_corner[1])
-            self.bottom_corner = (self.bottom_corner[0] - 1,
-                                  self.bottom_corner[1])
-            self.print_world()
-        elif answer == ord('d') or answer == curses.KEY_RIGHT:
-            # Move world left
-            self.top_corner = (self.top_corner[0] + 1, self.top_corner[1])
-            self.bottom_corner = (self.bottom_corner[0] + 1,
-                                  self.bottom_corner[1])
-            self.print_world()
-        elif answer == ord("r"):
+
+        if command == ord('w') or command == curses.KEY_UP:
+            self.move_down()
+        elif command == ord('s') or command == curses.KEY_DOWN:
+            self.move_up()
+        elif command == ord('a') or command == curses.KEY_LEFT:
+            self.move_left()
+        elif command == ord('d') or command == curses.KEY_RIGHT:
+            self.move_right()
+        elif command == ord("r"):
             # Ask user how many generations to animate
             try:
                 num = int(self.ask_user("How many generations"))
@@ -272,17 +291,11 @@ class Game:
                 return
             self.animate(num, 0.001)
 
-        elif answer == ord(" "):
-            # Update world
+        elif command == ord(" "):
             self.world.update()
-            self.print_world()
 
-        elif answer == ord("q"):
-            # quit game
+        elif command == ord("q"):
             self.exit("Quitting", 0)
-
-        else:
-            self.prompt()
 
     def print_world(self):
         """ print the world to curses or as ascii """

@@ -11,7 +11,8 @@ def main():
                              max_size=True)
     game.print_world()
     while True:
-        game.prompt()
+        user_command = game.get_command_from_user()
+        game.handle_command(user_command)
         game.print_world()
 
 if __name__ == "__main__":
