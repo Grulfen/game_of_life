@@ -7,8 +7,8 @@ SIZE_X, SIZE_Y = 80, 30
 
 def main():
     """ Main function """
-    game = game_of_life.Game(mode="curses", size_x=SIZE_X, size_y=SIZE_Y,
-                             max_size=True)
+    game = game_of_life.CursesGame(size_x=SIZE_X, size_y=SIZE_Y,
+                                   max_size=True)
     game.print_world()
     while True:
         user_command = game.get_command_from_user()

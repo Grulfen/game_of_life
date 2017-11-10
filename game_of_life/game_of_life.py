@@ -167,64 +167,14 @@ class World:
 
 class Game:
     """ Class handling the user interface """
-    def __init__(self, mode="screen", size_x=20, size_y=20,
-                 max_size=False):
+    def __init__(self, size_x=20, size_y=20):
 
         self.size_x = size_x
         self.size_y = size_y
-        self.mode = mode
-
-        if self.mode == "curses":
-            self.init_curses(max_size)
 
         self.world = World(self.size_x, self.size_y)
         self.top_corner = (0, 0)
         self.bottom_corner = (self.size_x, self.size_y)
-
-    def init_curses(self, max_size):
-        """ Initilize the curses screen """
-        self.screen = curses.initscr()
-        curses.start_color()
-        if not curses.has_colors():
-            self.exit("Error, no color support", 1)
-        else:
-            # We have color support
-            # Pair 1, green on black background
-            curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        if max_size:
-            # Get maximum size of screen
-            size_y_max, size_x_max = self.screen.getmaxyx()
-            # Need space for border
-            self.size_y, self.size_x = size_y_max - 3, size_x_max - 3
-
-        self.screen.border(0)
-        curses.noecho()
-        curses.cbreak()
-        self.screen.keypad(1)
-        curses.curs_set(0)
-
-    def ask_user(self, question):
-        """ Ask the users a question, return answer as string """
-        q_size = len(question)
-        self.screen.addstr(self.size_y // 2, self.size_x // 2 - q_size // 2,
-                           question + ' ', curses.color_pair(1))
-        answer = self.screen.getstr().decode("UTF-8")
-        return answer
-
-    def get_command_from_user_screen(self) -> int:
-        """ Get a command from user using terminal """
-        raise NotImplementedError('Prompt is not supported for \"screen\" mode worlds')
-
-    def get_command_from_user_curses(self) -> int:
-        """ Get a command from user using curses """
-        return self.screen.getch()
-
-    def get_command_from_user(self):
-        """ Get input from user """
-        if self.mode == "screen":
-            return self.get_command_from_user_screen()
-        elif self.mode == "curses":
-            return self.get_command_from_user_curses()
 
     def move_left(self):
         """ Move the viewing window of the world to the left """
@@ -279,44 +229,13 @@ class Game:
         elif command == ord("q"):
             self.exit("Quitting", 0)
 
-    def print_world(self):
-        """ print the world to curses or as ascii """
-        if self.mode == "curses":
-            self.print_curses(self.top_corner,
-                              self.bottom_corner)
-        elif self.mode == "screen":
-            self.print_screen()
-        else:
-            pass
+    def ask_user(self, question):
+        """ Should be implemented by child class """
+        raise NotImplementedError
 
-    def print_screen(self) -> None:
-        """ print the world to terminal """
-        print("\n".join(self.world.lines(None, None)))
-
-    def print_curses(self, start_pos, end_pos):
-        # type: (Pos, Pos) -> None
-        """Print the @world from @start_pos to @end_pos on ncurses @screen"""
-
-        list_of_lines = self.world.lines(start_pos, end_pos)
-
-        # TODO Add colors?
-        for line_no, line in enumerate(list_of_lines):
-            self.screen.addstr(line_no + 1, 1, line)
-        self.screen.refresh()
-
-    def kill_screen(self):
-        """ Kill the screen and cleanup """
-        if self.mode == "curses":
-            curses.endwin()
-
-    def exit(self, msg=None, status=0):
-        """ Exit game of life """
-        self.kill_screen()
-        if msg:
-            print(msg)
-        if not isinstance(status, int):
-            status = 0
-        sys.exit(status)
+    def print_world(self) -> None:
+        """ Should be implemented by child class """
+        raise NotImplementedError
 
     def animate(self, steps, timestep=0.2):
         """ Update and print the screen 'step' times"""
@@ -324,6 +243,91 @@ class Game:
             self.world.update()
             self.print_world()
             time.sleep(timestep)
+
+    def kill(self):
+        """ Should be implemented by child class """
+        raise NotImplementedError
+
+    def exit(self, msg=None, status=0):
+        """ Exit game of life """
+        self.kill()
+        if msg:
+            print(msg)
+        if not isinstance(status, int):
+            status = 0
+        sys.exit(status)
+
+
+class CursesGame(Game):
+    """ Game of life with ncurses UI """
+
+    def __init__(self, size_x=20, size_y=20, max_size=False):
+        self.init_curses(max_size)
+        super().__init__(self.size_x, self.size_y)
+
+    def init_curses(self, max_size: bool):
+        """ Initilize the curses screen """
+        self.screen = curses.initscr()
+        curses.start_color()
+        if not curses.has_colors():
+            self.exit("Error, no color support", 1)
+        else:
+            # We have color support
+            # Pair 1, green on black background
+            curses.init_pair(1, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        if max_size:
+            # Get maximum size of screen
+            size_y_max, size_x_max = self.screen.getmaxyx()
+            # Need space for border
+            self.size_y, self.size_x = size_y_max - 3, size_x_max - 3
+
+        self.screen.border(0)
+        curses.noecho()
+        curses.cbreak()
+        self.screen.keypad(1)
+        curses.curs_set(0)
+
+    def print_world(self) -> None:
+        """ Print the world ncurses """
+
+        list_of_lines = self.world.lines(self.top_corner, self.bottom_corner)
+
+        # TODO Add colors?
+        for line_no, line in enumerate(list_of_lines):
+            self.screen.addstr(line_no + 1, 1, line)
+        self.screen.refresh()
+
+    def get_command_from_user(self) -> int:
+        """ Get a command from user using curses """
+        return self.screen.getch()
+
+    def ask_user(self, question):
+        """ Ask the users a question, return answer as string """
+        q_size = len(question)
+        self.screen.addstr(self.size_y // 2, self.size_x // 2 - q_size // 2,
+                           question + ' ', curses.color_pair(1))
+        answer = self.screen.getstr().decode("UTF-8")
+        return answer
+
+    def kill(self):
+        """ Close the curses window """
+        curses.endwin()
+
+
+class ScreenGame(Game):
+    """ Game of life with terminal UI """
+
+    def print_world(self) -> None:
+        """ print the world to terminal """
+        print("\n".join(self.world.lines(None, None)))
+
+    def get_command_from_user(self) -> int:
+        """ Get a command from user using terminal """
+        raise NotImplementedError('Prompt is not supported for "screen" mode worlds')
+
+    def kill(self):
+        """ Nothing needs to be done to cleanup a terminal based ui """
+        pass
 
 
 signal.signal(signal.SIGINT, signal_handler)

@@ -170,7 +170,7 @@ class TestUpdateCells:
 
 @pytest.fixture
 def game():
-    return gol.Game(mode="screen", size_x=5, size_y=5)
+    return gol.ScreenGame(size_x=5, size_y=5)
 
 
 class TestGame:
