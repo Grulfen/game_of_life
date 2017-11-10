@@ -12,6 +12,7 @@ from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterable
 
 # pylint: disable=invalid-name
 Pos = Tuple[int, int]
+# pylint: enable=invalid-name
 
 DEAD_SYMBOL = '-'
 ALIVE_SYMBOL = '#'
@@ -69,8 +70,7 @@ class World:
         """Returns the new cell based on how many alive neighbours there is"""
         if cell:
             return 2 <= neighbours < 4
-        else:
-            return neighbours == 3
+        return neighbours == 3
 
     def make_neigh_cache(self):
         # type: () -> None
