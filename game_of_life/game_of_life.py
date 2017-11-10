@@ -165,24 +165,6 @@ class World:
         return len(self.world)
 
 
-def print_screen(world, start_pos=None, end_pos=None):
-    # type: (World, Pos, Pos) -> None
-    """Print @world between @start_pos and @end_pos to stdout"""
-    print("\n".join(world.lines(start_pos, end_pos)))
-
-
-def print_curses(world, screen, start_pos, end_pos):
-    # type: (World, Any, Pos, Pos) -> None
-    """Print the @world from @start_pos to @end_pos on ncurses @screen"""
-
-    list_of_lines = world.lines(start_pos, end_pos)
-
-    # TODO Add colors?
-    for line_no, line in enumerate(list_of_lines):
-        screen.addstr(line_no + 1, 1, line)
-    screen.refresh()
-
-
 class Game:
     """ Class handling the user interface """
     def __init__(self, mode="screen", size_x=20, size_y=20,
@@ -300,13 +282,27 @@ class Game:
     def print_world(self):
         """ print the world to curses or as ascii """
         if self.mode == "curses":
-            print_curses(self.world, self.screen,
-                         self.top_corner,
-                         self.bottom_corner)
+            self.print_curses(self.top_corner,
+                              self.bottom_corner)
         elif self.mode == "screen":
-            print_screen(self.world)
+            self.print_screen()
         else:
             pass
+
+    def print_screen(self) -> None:
+        """ print the world to terminal """
+        print("\n".join(self.world.lines(None, None)))
+
+    def print_curses(self, start_pos, end_pos):
+        # type: (Pos, Pos) -> None
+        """Print the @world from @start_pos to @end_pos on ncurses @screen"""
+
+        list_of_lines = self.world.lines(start_pos, end_pos)
+
+        # TODO Add colors?
+        for line_no, line in enumerate(list_of_lines):
+            self.screen.addstr(line_no + 1, 1, line)
+        self.screen.refresh()
 
     def kill_screen(self):
         """ Kill the screen and cleanup """

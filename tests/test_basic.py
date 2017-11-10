@@ -55,38 +55,12 @@ class TestPrintWorld:
         out, _ = capsys.readouterr()
         assert out == "\n"
 
-    def test_print_screen_empty_world(self, capsys):
-        world = gol.World(randomize=False, size_x=3, size_y=3)
-        gol.print_screen(world)
-        out, _ = capsys.readouterr()
-        assert out == "\n"
-
     def test_print_one_cell_world(self, capsys):
         world = gol.World(randomize=False, size_x=3, size_y=3)
         world.set_cell((1, 1))
         print(world)
         out, _ = capsys.readouterr()
         assert out == gol.ALIVE_SYMBOL + "\n"
-
-    def test_print_screen_one_cell_world(self, capsys):
-        world = gol.World(randomize=False, size_x=3, size_y=3)
-        world.set_cell((1, 1))
-        gol.print_screen(world)
-        out, _ = capsys.readouterr()
-        assert out == gol.ALIVE_SYMBOL + "\n"
-
-    def test_print_screen_one_cell_world_with_surroundings(self, capsys):
-        world = gol.World(randomize=False, size_x=3, size_y=3)
-        world.set_cell((1, 1))
-        gol.print_screen(world, (0, 0), (2, 2))
-        out, _ = capsys.readouterr()
-        # pylint: disable=unused-format-string-argument
-        string = "\n".join([
-            "{d}{d}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
-            "{d}{a}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
-            "{d}{d}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
-            ])
-        assert out == string + "\n"
 
     def test_print_screen_3x4_world(self, capsys):
         """
@@ -99,7 +73,7 @@ class TestPrintWorld:
         positions = [(0, 2), (1, 1), (2, 0), (3, 1)]
         for pos in positions:
             world.set_cell(pos)
-        gol.print_screen(world)
+        print(world)
         out, _ = capsys.readouterr()
         string = "\n".join([
             "{d}{d}{a}{d}".format(d=gol.DEAD_SYMBOL, a=gol.ALIVE_SYMBOL),
