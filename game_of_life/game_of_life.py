@@ -229,24 +229,12 @@ class Game:
         elif command == ord("q"):
             self.exit("Quitting", 0)
 
-    def ask_user(self, question):
-        """ Should be implemented by child class """
-        raise NotImplementedError
-
-    def print_world(self) -> None:
-        """ Should be implemented by child class """
-        raise NotImplementedError
-
     def animate(self, steps, timestep=0.2):
         """ Update and print the screen 'step' times"""
         for _ in range(steps):
             self.world.update()
             self.print_world()
             time.sleep(timestep)
-
-    def kill(self):
-        """ Should be implemented by child class """
-        raise NotImplementedError
 
     def exit(self, msg=None, status=0):
         """ Exit game of life """
@@ -256,6 +244,18 @@ class Game:
         if not isinstance(status, int):
             status = 0
         sys.exit(status)
+
+    def kill(self):
+        """ Should be implemented by child class """
+        raise NotImplementedError
+
+    def ask_user(self, question):
+        """ Should be implemented by child class """
+        raise NotImplementedError
+
+    def print_world(self) -> None:
+        """ Should be implemented by child class """
+        raise NotImplementedError
 
 
 class CursesGame(Game):
