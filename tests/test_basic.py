@@ -202,3 +202,13 @@ class TestGame:
         game.move_down()
         assert game.top_corner == (old_top_corner[0], old_top_corner[1] - 1)
         assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] - 1)
+
+    def test_exit_returns_zero_exit_code(self, game):
+        with pytest.raises(SystemExit):
+            game.exit()
+
+    def test_exit_with_msg_print_message(self, game, capsys):
+        with pytest.raises(SystemExit):
+            game.exit("this is error message")
+        out, _err = capsys.readouterr()
+        assert out == "this is error message\n"
