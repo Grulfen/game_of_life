@@ -173,6 +173,11 @@ def game():
     return gol.ScreenGame(size_x=5, size_y=5, randomize=True)
 
 
+@pytest.fixture
+def empty_screen_game():
+    return gol.ScreenGame(size_x=5, size_y=5, randomize=False)
+
+
 class TestGame:
 
     def test_corners_moves_if_move_left(self, game):
@@ -212,3 +217,17 @@ class TestGame:
             game.exit("this is error message")
         out, _err = capsys.readouterr()
         assert out == "this is error message\n"
+
+
+class TestScreenGame:
+
+    def test_print_empty_game(self, empty_screen_game, capsys):
+        empty_screen_game.print_world()
+        out, _err = capsys.readouterr()
+        assert out == "\n"
+
+    def test_animate_empty_game_prints_empty_worlds(self, empty_screen_game, capsys):
+        steps = 10
+        empty_screen_game.animate(steps, timestep=0)
+        out, _err = capsys.readouterr()
+        assert out == steps * "\n"

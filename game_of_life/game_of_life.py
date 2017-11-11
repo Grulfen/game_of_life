@@ -319,7 +319,7 @@ class ScreenGame(Game):
 
     def print_world(self) -> None:
         """ print the world to terminal """
-        print("\n".join(self.world.lines(None, None)))
+        print(self.world)
 
     def get_command_from_user(self) -> int:
         """ Get a command from user using terminal """
