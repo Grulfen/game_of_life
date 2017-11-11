@@ -26,7 +26,7 @@ def signal_handler(_sig, _frame):
 
 class World:
     """ World class """
-    def __init__(self, size_x=10, size_y=10, randomize=True):
+    def __init__(self, size_x=10, size_y=10, randomize=False):
         # type : (int, int, Bool) -> None
         self.make_neigh_cache()
         self.world = set()  # type: Set[Pos]
@@ -167,12 +167,12 @@ class World:
 
 class Game:
     """ Class handling the user interface """
-    def __init__(self, size_x=20, size_y=20):
+    def __init__(self, size_x=20, size_y=20, randomize=True):
 
         self.size_x = size_x
         self.size_y = size_y
 
-        self.world = World(self.size_x, self.size_y)
+        self.world = World(self.size_x, self.size_y, randomize)
         self.top_corner = (0, 0)
         self.bottom_corner = (self.size_x, self.size_y)
 
@@ -261,9 +261,9 @@ class Game:
 class CursesGame(Game):
     """ Game of life with ncurses UI """
 
-    def __init__(self, size_x=20, size_y=20, max_size=False):
+    def __init__(self, size_x=20, size_y=20, randomize=True, max_size=False):
         self.init_curses(max_size)
-        super().__init__(self.size_x, self.size_y)
+        super().__init__(self.size_x, self.size_y, randomize)
 
     def init_curses(self, max_size: bool):
         """ Initilize the curses screen """

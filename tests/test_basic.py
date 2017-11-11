@@ -14,12 +14,12 @@ NEIGHBOURS = [(x, y)
 
 class TestWorldPositions:
     def test_min_pos_empty_world_is_0_0(self):
-        world = gol.World(randomize=False)
+        world = gol.World()
         assert world.min_pos() == (0, 0)
 
 
     def test_max_pos_empty_world_is_0_0(self):
-        world = gol.World(randomize=False)
+        world = gol.World()
         assert world.max_pos() == (0, 0)
 
     @pytest.mark.parametrize("pos",
@@ -28,7 +28,7 @@ class TestWorldPositions:
                               (-54, 1000),
                               (74, -125)])
     def test_one_cell_is_both_min_and_max(self, pos):
-        world = gol.World(randomize=False)
+        world = gol.World()
         world.set_cell(pos)
         assert world.max_pos() == pos and world.min_pos() == pos
 
@@ -41,7 +41,7 @@ class TestWorldPositions:
         --x-            +++X
 
         """
-        world = gol.World(randomize=False)
+        world = gol.World()
         positions = [(0, 2), (2, 0), (3, 1), (2, 3)]
         for pos in positions:
             world.set_cell(pos)
@@ -50,13 +50,13 @@ class TestWorldPositions:
 
 class TestPrintWorld:
     def test_print_empty_world(self, capsys):
-        world = gol.World(randomize=False, size_x=3, size_y=3)
+        world = gol.World(size_x=3, size_y=3)
         print(world)
         out, _ = capsys.readouterr()
         assert out == "\n"
 
     def test_print_one_cell_world(self, capsys):
-        world = gol.World(randomize=False, size_x=3, size_y=3)
+        world = gol.World(size_x=3, size_y=3)
         world.set_cell((1, 1))
         print(world)
         out, _ = capsys.readouterr()
@@ -69,7 +69,7 @@ class TestPrintWorld:
         x---
 
         """
-        world = gol.World(randomize=False)
+        world = gol.World()
         positions = [(0, 2), (1, 1), (2, 0), (3, 1)]
         for pos in positions:
             world.set_cell(pos)
@@ -85,24 +85,24 @@ class TestPrintWorld:
 
 class TestWorldInit:
     def test_new_world_is_empty(self):
-        world = gol.World(randomize=False)
+        world = gol.World()
         assert len(world) == 0
 
     @pytest.mark.parametrize("num", range(16))
     def test_random_init_contains_correct_number_of_alive_cells(self, num):
-        world = gol.World(randomize=False)
+        world = gol.World()
         world.randomize(num, size_x=4, size_y=4)
         assert len(world) == num
 
     def test_random_init_with_too_many_cells_raises_exception(self):
-        world = gol.World(randomize=False)
+        world = gol.World()
         with pytest.raises(ValueError):
             world.randomize(3 * 3 + 1, size_x=3, size_y=3)
 
 class TestUpdateCells:
 
     def test_step_empty_world_is_empty(self):
-        world = gol.World(randomize=False)
+        world = gol.World()
         world.update()
         assert len(world) == 0
 
@@ -127,7 +127,7 @@ class TestUpdateCells:
         ----------------------+------------------------
         """
         for positions in alive_cells:
-            world = gol.World(3, 3, randomize=False)
+            world = gol.World(3, 3)
             for x, y in positions:
                 world.set_cell((x, y))
             world.update()
@@ -160,7 +160,7 @@ class TestUpdateCells:
         ----------------------+------------------------
         """
         for positions in alive_cells:
-            world = gol.World(3, 3, randomize=False)
+            world = gol.World(3, 3)
             world.set_cell((1, 1))
             for x, y in positions:
                 world.set_cell((x, y))
@@ -170,7 +170,7 @@ class TestUpdateCells:
 
 @pytest.fixture
 def game():
-    return gol.ScreenGame(size_x=5, size_y=5)
+    return gol.ScreenGame(size_x=5, size_y=5, randomize=True)
 
 
 class TestGame:
