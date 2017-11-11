@@ -208,7 +208,7 @@ class TestGame:
         assert game.top_corner == (old_top_corner[0], old_top_corner[1] - 1)
         assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] - 1)
 
-    def test_exit_returns_zero_exit_code(self, game):
+    def test_exit_raises_system_exit(self, game):
         with pytest.raises(SystemExit):
             game.exit()
 
