@@ -262,6 +262,8 @@ class CursesGame(Game):
     """ Game of life with ncurses UI """
 
     def __init__(self, size_x=20, size_y=20, randomize=True, max_size=False):
+        self.size_x = size_x
+        self.size_y = size_y
         self.init_curses(max_size)
         super().__init__(self.size_x, self.size_y, randomize)
 
