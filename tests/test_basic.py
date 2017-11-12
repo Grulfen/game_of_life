@@ -228,6 +228,13 @@ class TestGame:
         out, _err = capsys.readouterr()
         assert out == "this is error message\n"
 
+    def test_exit_exits_with_correct_code(self, game):
+        with pytest.raises(SystemExit) as exit_info:
+            game.exit(status=20)
+
+        assert exit_info.value.code == 20
+
+
 
 class TestScreenGame:
 
