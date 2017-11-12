@@ -7,7 +7,7 @@ import sys
 from itertools import product
 
 # pylint: disable=unused-import
-from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterable
+from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterable, List
 # pylint: enable=unused-import
 
 # pylint: disable=invalid-name
@@ -26,15 +26,13 @@ def signal_handler(_sig, _frame):
 
 class World:
     """ World class """
-    def __init__(self, size_x=10, size_y=10, randomize=False):
-        # type : (int, int, Bool) -> None
+    def __init__(self, size_x: int = 10, size_y: int = 10, randomize: bool = False) -> None:
         self.make_neigh_cache()
         self.world = set()  # type: Set[Pos]
         if randomize:
             self.randomize(int(size_x * size_y * 1 / 3), size_x, size_y)
 
-    def randomize(self, num, size_x, size_y):
-        # type: (int, int, int) -> None
+    def randomize(self, num: int, size_x: int, size_y: int):
         """ Create @num number of alive cells between (0, 0) and (size_x, size_y) """
         if num > size_x * size_y:
             raise ValueError("Trying to add more cells than space in world")
@@ -43,8 +41,7 @@ class World:
         for cell in random.sample(list(all_cells), num):
             self.world.add(cell)
 
-    def _find_corner(self, func, empty_pos):
-        # type: (Callable[[Iterable[int]], int], Pos) -> Pos
+    def _find_corner(self, func: Callable[[Iterable[int]], int], empty_pos: Pos) -> Pos:
         """ Helper function to find corners of bounding rectangle of alive cells """
         if not self.world:
             # World empty
@@ -54,26 +51,22 @@ class World:
             y = func(cell[1] for cell in self.world)
         return (x, y)
 
-    def min_pos(self):
-        # type: () -> Pos
+    def min_pos(self) -> Pos:
         """ Return the top left position of the bounding rectangle of all alive cells """
         return self._find_corner(min, (0, 0))
 
-    def max_pos(self):
-        # type: () -> Pos
+    def max_pos(self) -> Pos:
         """ Return the bottom, right position with alive cell"""
         return self._find_corner(max, (0, 0))
 
     @staticmethod
-    def _new_cell(cell, neighbours):
-        # type: (bool, int) -> bool
+    def _new_cell(cell: bool, neighbours: int) -> bool:
         """Returns the new cell based on how many alive neighbours there is"""
         if cell:
             return 2 <= neighbours < 4
         return neighbours == 3
 
-    def make_neigh_cache(self):
-        # type: () -> None
+    def make_neigh_cache(self) -> None:
         """ Create lists of relative positions of neighbours and
             cells in a 3x3 block """
         self._neigh_cache = [(x, y)
@@ -84,8 +77,7 @@ class World:
                                   for x in range(-1, 2)
                                   for y in range(-1, 2)]
 
-    def calculate_neighbours(self, pos):
-        # type: (Pos) -> int
+    def calculate_neighbours(self, pos: Pos) -> int:
         """ calculate the number of neighbours of cell pos """
         neighbours = 0
         x, y = pos
@@ -94,8 +86,7 @@ class World:
             neighbours += 1 if neighbour_pos in self.world else 0
         return neighbours
 
-    def update_cell(self, new_world, pos):
-        # type: (Set[Pos], Pos) -> Set[Pos]
+    def update_cell(self, new_world: Set[Pos], pos: Pos) -> Set[Pos]:
         """ Update the cell at position pos """
         neighbours = self.calculate_neighbours(pos)
         new_cell = self._new_cell(pos in self.world, neighbours)
@@ -103,8 +94,10 @@ class World:
             new_world.add(pos)
         return new_world
 
-    def update_neighbours(self, new_world, pos, updated_cells):
-        # type: (Set[Pos], Pos, Set[Pos]) -> Tuple[Set[Pos], Set[Pos]]
+    def update_neighbours(self,
+                          new_world: Set[Pos],
+                          pos: Pos,
+                          updated_cells: Set[Pos]) -> Tuple[Set[Pos], Set[Pos]]:
         """Update the cells in new_world around cell in position pos"""
         for x, y in self._makro_cell_cache:
             if (pos[0] + x, pos[1] + y) in updated_cells:
@@ -116,8 +109,7 @@ class World:
                 updated_cells.add((pos[0] + x, pos[1] + y))
         return new_world, updated_cells
 
-    def update(self):
-        # type: () -> None
+    def update(self) -> None:
         """ Update the current world one step """
         new_world = set()  # type: Set[Pos]
         updated_cells = set()  # type: Set[Pos]
@@ -125,14 +117,12 @@ class World:
             new_world, updated_cells = self.update_neighbours(new_world, pos, updated_cells)
         self.world = new_world
 
-    def set_cell(self, pos):
-        # type: (Pos) -> None
+    def set_cell(self, pos: Pos) -> None:
         """ Create a live cell at @pos """
         self.world.add(pos)
 
-    def lines(self, top_left=None, bottom_right=None):
-        # type: (World, Pos, Pos) -> List[str]
-        """Return @world between @top_left and @bottom_right as list of strings """
+    def lines(self, top_left: Pos = None, bottom_right: Pos = None) -> List[str]:
+        """Return world between @top_left and @bottom_right as list of strings """
         if top_left is None:
             top_left = self.min_pos()
 
@@ -153,21 +143,19 @@ class World:
             world_lines.append(string)
         return world_lines
 
-    def __str__(self):
-        # type: () -> str
+    def __str__(self) -> str:
         return "\n".join(self.lines())
 
-    def __getitem__(self, pos):
-        # type: (Pos) -> int
+    def __getitem__(self, pos: Pos) -> int:
         return 1 if pos in self.world else 0
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.world)
 
 
 class Game:
     """ Class handling the user interface """
-    def __init__(self, size_x=20, size_y=20, randomize=True):
+    def __init__(self, size_x: int = 20, size_y: int = 20, randomize: bool = True) -> None:
 
         self.size_x = size_x
         self.size_y = size_y
@@ -176,27 +164,27 @@ class Game:
         self.top_corner = (0, 0)
         self.bottom_corner = (self.size_x, self.size_y)
 
-    def move_left(self):
+    def move_left(self) -> None:
         """ Move the viewing window of the world to the left """
         self.top_corner = (self.top_corner[0] - 1, self.top_corner[1])
         self.bottom_corner = (self.bottom_corner[0] - 1, self.bottom_corner[1])
 
-    def move_right(self):
+    def move_right(self) -> None:
         """ Move the viewing window of the world to the right """
         self.top_corner = (self.top_corner[0] + 1, self.top_corner[1])
         self.bottom_corner = (self.bottom_corner[0] + 1, self.bottom_corner[1])
 
-    def move_up(self):
+    def move_up(self) -> None:
         """ Move the viewing window of the world to the up """
         self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
         self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] + 1)
 
-    def move_down(self):
+    def move_down(self) -> None:
         """ Move the viewing window of the world to the down """
         self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
         self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] - 1)
 
-    def handle_command(self, command):
+    def handle_command(self, command: str) -> None:
         """ Handle commands
             space: continue one generation
             w or up: move screen up
@@ -217,7 +205,7 @@ class Game:
         elif command == ord("r"):
             # Ask user how many generations to animate
             try:
-                num = int(self.ask_user("How many generations"))
+                    num = int(self.ask_user("How many generations"))
             except ValueError:
                 self.ask_user("Enter integer please")
                 return
@@ -229,14 +217,14 @@ class Game:
         elif command == ord("q"):
             self.exit("Quitting", 0)
 
-    def animate(self, steps, timestep=0.2):
+    def animate(self, steps: int, timestep: float = 0.2) -> None:
         """ Update and print the screen 'step' times"""
         for _ in range(steps):
             self.world.update()
             self.print_world()
             time.sleep(timestep)
 
-    def exit(self, msg=None, status=0):
+    def exit(self, msg: str = None, status: int = 0) -> None:
         """ Exit game of life """
         self.kill()
         if msg:
@@ -245,11 +233,11 @@ class Game:
             status = 0
         sys.exit(status)
 
-    def kill(self):
+    def kill(self) -> None:
         """ Should be implemented by child class """
         raise NotImplementedError
 
-    def ask_user(self, question):
+    def ask_user(self, question: str) -> str:
         """ Should be implemented by child class """
         raise NotImplementedError
 
@@ -261,13 +249,17 @@ class Game:
 class CursesGame(Game):
     """ Game of life with ncurses UI """
 
-    def __init__(self, size_x=20, size_y=20, randomize=True, max_size=False):
+    def __init__(self,
+                 size_x: int = 20,
+                 size_y: int = 20,
+                 randomize: bool = True,
+                 max_size: bool = False) -> None:
         self.size_x = size_x
         self.size_y = size_y
         self.init_curses(max_size)
         super().__init__(self.size_x, self.size_y, randomize)
 
-    def init_curses(self, max_size: bool):
+    def init_curses(self, max_size: bool) -> None:
         """ Initilize the curses screen """
         self.screen = curses.initscr()
         curses.start_color()
@@ -303,7 +295,7 @@ class CursesGame(Game):
         """ Get a command from user using curses """
         return self.screen.getch()
 
-    def ask_user(self, question):
+    def ask_user(self, question: str) -> str:
         """ Ask the users a question, return answer as string """
         q_size = len(question)
         self.screen.addstr(self.size_y // 2, self.size_x // 2 - q_size // 2,
@@ -311,7 +303,7 @@ class CursesGame(Game):
         answer = self.screen.getstr().decode("UTF-8")
         return answer
 
-    def kill(self):
+    def kill(self) -> None:
         """ Close the curses window """
         curses.endwin()
 
@@ -327,7 +319,7 @@ class ScreenGame(Game):
         """ Get a command from user using terminal """
         raise NotImplementedError('Prompt is not supported for "screen" mode worlds')
 
-    def kill(self):
+    def kill(self) -> None:
         """ Nothing needs to be done to cleanup a terminal based ui """
         pass
 
