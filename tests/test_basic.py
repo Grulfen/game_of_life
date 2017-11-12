@@ -169,13 +169,23 @@ class TestUpdateCells:
 
 
 @pytest.fixture
-def game():
+def curses_game():
+    game = gol.CursesGame(size_x=5, size_y=5, randomize=True)
+    yield game
+    game.kill()
+
+
+@pytest.fixture
+def screen_game():
     return gol.ScreenGame(size_x=5, size_y=5, randomize=True)
 
 
 @pytest.fixture
 def empty_screen_game():
     return gol.ScreenGame(size_x=5, size_y=5, randomize=False)
+
+
+game = screen_game
 
 
 class TestGame:
