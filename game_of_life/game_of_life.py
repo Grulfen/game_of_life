@@ -4,7 +4,7 @@ import time
 import random
 import signal
 import sys
-from itertools import product
+from itertools import product, chain
 
 # pylint: disable=unused-import
 from typing import Dict, Tuple, NewType, Any, Set, Callable, Iterable, List
@@ -27,7 +27,6 @@ def signal_handler(_sig, _frame):
 class World:
     """ World class """
     def __init__(self, size_x: int = 10, size_y: int = 10, randomize: bool = False) -> None:
-        self.make_neigh_cache()
         self.world = set()  # type: Set[Pos]
         if randomize:
             self.randomize(int(size_x * size_y * 1 / 3), size_x, size_y)
@@ -66,55 +65,45 @@ class World:
             return 2 <= neighbours < 4
         return neighbours == 3
 
-    def make_neigh_cache(self) -> None:
-        """ Create lists of relative positions of neighbours and
-            cells in a 3x3 block """
-        self._neigh_cache = [(x, y)
-                             for x in range(-1, 2)
-                             for y in range(-1, 2)
-                             if not (x == 0 and y == 0)]
-        self._makro_cell_cache = [(x, y)
-                                  for x in range(-1, 2)
-                                  for y in range(-1, 2)]
-
     def calculate_neighbours(self, pos: Pos) -> int:
         """ calculate the number of neighbours of cell pos """
         neighbours = 0
         x, y = pos
-        for d_x, d_y in self._neigh_cache:
+        for d_x, d_y in self.neighbours(pos):
             neighbour_pos = (x + d_x, y + d_y)
             neighbours += 1 if neighbour_pos in self.world else 0
         return neighbours
 
-    def update_cell(self, new_world: Set[Pos], pos: Pos) -> Set[Pos]:
-        """ Update the cell at position pos """
-        neighbours = self.calculate_neighbours(pos)
-        new_cell = self._new_cell(pos in self.world, neighbours)
-        if new_cell:
-            new_world.add(pos)
-        return new_world
+    @staticmethod
+    def neighbours(pos: Pos) -> Iterable[Pos]:
+        """ Calculate the positions of all neighbours of @pos """
+        x, y = pos
+        yield x - 1, y - 1
+        yield x, y - 1
+        yield x + 1, y - 1
 
-    def update_neighbours(self,
-                          new_world: Set[Pos],
-                          pos: Pos,
-                          updated_cells: Set[Pos]) -> Tuple[Set[Pos], Set[Pos]]:
-        """Update the cells in new_world around cell in position pos"""
-        for x, y in self._makro_cell_cache:
-            if (pos[0] + x, pos[1] + y) in updated_cells:
-                # Cell already updated, continue
-                continue
-            else:
-                # Cell not updated yet, updating
-                new_world = self.update_cell(new_world, (pos[0] + x, pos[1] + y))
-                updated_cells.add((pos[0] + x, pos[1] + y))
-        return new_world, updated_cells
+        yield x - 1, y
+        yield x + 1, y
+
+        yield x - 1, y + 1
+        yield x, y + 1
+        yield x + 1, y + 1
+
+    def cell_alive(self, pos: Pos) -> bool:
+        """ Is this cell alive next generation """
+        neighbours = self.calculate_neighbours(pos)
+        return self._new_cell(pos in self.world, neighbours)
 
     def update(self) -> None:
         """ Update the current world one step """
         new_world = set()  # type: Set[Pos]
-        updated_cells = set()  # type: Set[Pos]
-        for pos in self.world:
-            new_world, updated_cells = self.update_neighbours(new_world, pos, updated_cells)
+
+        recalculate = self.world | set(chain(*(self.neighbours(pos) for pos in self.world)))
+
+        for position in recalculate:
+            if self.cell_alive(position):
+                new_world.add(position)
+
         self.world = new_world
 
     def set_cell(self, pos: Pos) -> None:

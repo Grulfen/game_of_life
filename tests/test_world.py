@@ -12,6 +12,11 @@ NEIGHBOURS = [(x, y)
               if not (x == 0 and y == 0)]
 
 
+@pytest.fixture
+def empty_world():
+    return gol.World(size_x=10, size_y=10)
+
+
 class TestWorldPositions:
     """ Test calculation of max and min pos of world """
     def test_min_pos_empty_world_is_0_0(self):
@@ -101,6 +106,14 @@ class TestWorldInit:
         with pytest.raises(ValueError):
             world.randomize(3 * 3 + 1, size_x=3, size_y=3)
 
+
+class TestWorldNeighbours:
+    """ Test the neighbours calculation """
+
+    def test_has_correct_neighbours(self, empty_world):
+        position = (2, 2)
+        assert sorted(empty_world.neighbours(position)) == sorted((position[0] + x, position[1] + y)
+                                                                  for x, y in NEIGHBOURS)
 
 class TestUpdateCells:
     """ Test updating the world some generation """
