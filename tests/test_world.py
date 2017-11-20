@@ -1,5 +1,9 @@
 """ Test for the World class of game of life """
 
+# pylint: disable=no-self-use
+# pylint: disable=missing-docstring
+# pylint: disable=redefined-outer-name
+
 from itertools import combinations
 import pytest  # type: ignore
 
@@ -13,18 +17,16 @@ NEIGHBOURS = [(x, y)
 
 
 @pytest.fixture
-def empty_world():
+def world():
     return gol.World(size_x=10, size_y=10)
 
 
 class TestWorldPositions:
     """ Test calculation of max and min pos of world """
-    def test_min_pos_empty_world_is_0_0(self):
-        world = gol.World()
+    def test_min_pos_empty_world_is_0_0(self, world):
         assert world.min_pos() == (0, 0)
 
-    def test_max_pos_empty_world_is_0_0(self):
-        world = gol.World()
+    def test_max_pos_empty_world_is_0_0(self, world):
         assert world.max_pos() == (0, 0)
 
     @pytest.mark.parametrize("pos",
@@ -32,12 +34,11 @@ class TestWorldPositions:
                               (-4, -15),
                               (-54, 1000),
                               (74, -125)])
-    def test_one_cell_is_both_min_and_max(self, pos):
-        world = gol.World()
+    def test_one_cell_is_both_min_and_max(self, pos, world):
         world.set_cell(pos)
         assert world.max_pos() == pos and world.min_pos() == pos
 
-    def test_bounding_rectangle(self):
+    def test_bounding_rectangle(self, world):
         """
         Alive cells    Bounding rectangle
         --x-            X+++
@@ -46,7 +47,6 @@ class TestWorldPositions:
         --x-            +++X
 
         """
-        world = gol.World()
         positions = [(0, 2), (2, 0), (3, 1), (2, 3)]
         for pos in positions:
             world.set_cell(pos)
@@ -55,27 +55,24 @@ class TestWorldPositions:
 
 class TestPrintWorld:
     """ Test printing the world """
-    def test_print_empty_world(self, capsys):
-        world = gol.World(size_x=3, size_y=3)
+    def test_print_empty_world(self, capsys, world):
         print(world)
         out, _ = capsys.readouterr()
         assert out == "\n"
 
-    def test_print_one_cell_world(self, capsys):
-        world = gol.World(size_x=3, size_y=3)
+    def test_print_one_cell_world(self, capsys, world):
         world.set_cell((1, 1))
         print(world)
         out, _ = capsys.readouterr()
         assert out == gol.ALIVE_SYMBOL + "\n"
 
-    def test_print_screen_3x4_world(self, capsys):
+    def test_print_screen_3x4_world(self, capsys, world):
         """
         --x-
         -x-x
         x---
 
         """
-        world = gol.World()
         positions = [(0, 2), (1, 1), (2, 0), (3, 1)]
         for pos in positions:
             world.set_cell(pos)
@@ -91,18 +88,15 @@ class TestPrintWorld:
 
 class TestWorldInit:
     """ Test initial world state """
-    def test_new_world_is_empty(self):
-        world = gol.World()
+    def test_new_world_is_empty(self, world):
         assert not world
 
     @pytest.mark.parametrize("num", range(16))
-    def test_random_init_contains_correct_number_of_alive_cells(self, num):
-        world = gol.World()
+    def test_random_init_contains_correct_number_of_alive_cells(self, num, world):
         world.randomize(num, size_x=4, size_y=4)
         assert len(world) == num
 
-    def test_random_init_with_too_many_cells_raises_exception(self):
-        world = gol.World()
+    def test_random_init_with_too_many_cells_raises_exception(self, world):
         with pytest.raises(ValueError):
             world.randomize(3 * 3 + 1, size_x=3, size_y=3)
 
@@ -110,16 +104,16 @@ class TestWorldInit:
 class TestWorldNeighbours:
     """ Test the neighbours calculation """
 
-    def test_has_correct_neighbours(self, empty_world):
+    def test_has_correct_neighbours(self, world):
         position = (2, 2)
-        assert sorted(empty_world.neighbours(position)) == sorted((position[0] + x, position[1] + y)
-                                                                  for x, y in NEIGHBOURS)
+        assert sorted(world.neighbours(position)) == sorted((position[0] + x, position[1] + y)
+                                                            for x, y in NEIGHBOURS)
+
 
 class TestUpdateCells:
     """ Test updating the world some generation """
 
-    def test_step_empty_world_is_empty(self):
-        world = gol.World()
+    def test_step_empty_world_is_empty(self, world):
         world.update()
         assert not world
 
