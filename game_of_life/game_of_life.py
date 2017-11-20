@@ -205,7 +205,7 @@ class Game:
         elif command == ord("r"):
             # Ask user how many generations to animate
             try:
-                    num = int(self.ask_user("How many generations"))
+                num = int(self.ask_user("How many generations"))
             except ValueError:
                 self.ask_user("Enter integer please")
                 return

@@ -1,7 +1,7 @@
 """ Tests for game of life """
 from itertools import combinations
 
-import pytest
+import pytest  # type: ignore
 
 from .context import game_of_life as gol
 
@@ -16,7 +16,6 @@ class TestWorldPositions:
     def test_min_pos_empty_world_is_0_0(self):
         world = gol.World()
         assert world.min_pos() == (0, 0)
-
 
     def test_max_pos_empty_world_is_0_0(self):
         world = gol.World()
