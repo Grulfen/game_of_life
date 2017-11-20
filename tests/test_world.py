@@ -7,9 +7,9 @@ from .context import game_of_life as gol
 
 
 NEIGHBOURS = [(x, y)
-              for x in range(3)
-              for y in range(3)
-              if not (x == 1 and y == 1)]
+              for x in range(-1, 2)
+              for y in range(-1, 2)
+              if not (x == 0 and y == 0)]
 
 
 class TestWorldPositions:
@@ -135,7 +135,7 @@ class TestUpdateCells:
             for x, y in positions:
                 world.set_cell((x, y))
             world.update()
-            assert world[(1, 1)] == alive
+            assert world[(0, 0)] == alive
 
     @pytest.mark.parametrize("alive_cells,alive",
                              [(list(combinations(NEIGHBOURS, 0)), 0),
@@ -165,8 +165,8 @@ class TestUpdateCells:
         """
         for positions in alive_cells:
             world = gol.World(3, 3)
-            world.set_cell((1, 1))
+            world.set_cell((0, 0))
             for x, y in positions:
                 world.set_cell((x, y))
             world.update()
-            assert world[(1, 1)] == alive
+            assert world[(0, 0)] == alive
