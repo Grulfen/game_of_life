@@ -73,6 +73,50 @@ class TestGame:
 
         assert exit_info.value.code == 20
 
+    def test_handle_command_w_calls_move_up(self, game, mocker):
+        mocker.patch.object(game, "move_up")
+        game.handle_command(ord("w"))
+        assert game.move_up.called
+
+    def test_handle_command_s_calls_move_down(self, game, mocker):
+        mocker.patch.object(game, "move_down")
+        game.handle_command(ord("s"))
+        assert game.move_down.called
+
+    def test_handle_command_a_calls_move_left(self, game, mocker):
+        mocker.patch.object(game, "move_left")
+        game.handle_command(ord("a"))
+        assert game.move_left.called
+
+    def test_handle_command_d_calls_move_right(self, game, mocker):
+        mocker.patch.object(game, "move_right")
+        game.handle_command(ord("d"))
+        assert game.move_right.called
+
+    def test_handle_command_q_calls_exit(self, game, mocker):
+        mocker.patch.object(game, "exit")
+        game.handle_command(ord("q"))
+        assert game.exit.called
+
+    def test_handle_command_space_calls_update_world(self, game, mocker):
+        mocker.patch.object(game.world, "update")
+        game.handle_command(ord(" "))
+        assert game.world.update.called
+
+    def test_handle_command_r_calls_get_number_of_generations(self, game, mocker):
+        mocker.patch.object(game, "get_number_of_generations")
+        game.handle_command(ord("r"))
+        assert game.get_number_of_generations.called
+
+    def test_get_number_of_generations_calls_ask_user(self, game, mocker):
+        mocker.patch.object(game, "ask_user")
+        game.get_number_of_generations()
+        assert game.ask_user.called
+
+    def test_get_number_of_generations_with_invalid_input_returns_None(self, game, mocker):
+        mocker.patch.object(game, "ask_user")
+        game.ask_user.return_value = "tjosan"
+        assert game.get_number_of_generations() is None
 
 
 class TestScreenGame:

@@ -173,6 +173,14 @@ class Game:
         self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
         self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] + 1)
 
+    def get_number_of_generations(self) -> int:
+        try:
+            num = int(self.ask_user("How many generations?"))
+        except ValueError:
+            self.ask_user("Enter integer please")
+            return None
+        return num
+
     def handle_command(self, command: int) -> None:
         """ Handle commands
             space: continue one generation
@@ -192,11 +200,8 @@ class Game:
         elif command == ord('d') or command == curses.KEY_RIGHT:
             self.move_right()
         elif command == ord("r"):
-            # Ask user how many generations to animate
-            try:
-                num = int(self.ask_user("How many generations"))
-            except ValueError:
-                self.ask_user("Enter integer please")
+            num = self.get_number_of_generations()
+            if num is None:
                 return
             self.animate(num, 0.001)
 
