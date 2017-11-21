@@ -96,7 +96,7 @@ class World:
 
     def update(self) -> None:
         """ Update the current world one step """
-        new_world = set()  # type: Set[Pos]
+        new_world = set()
 
         recalculate = self.world | set(chain(*(self.neighbours(pos) for pos in self.world)))
 
@@ -165,15 +165,15 @@ class Game:
 
     def move_up(self) -> None:
         """ Move the viewing window of the world to the up """
-        self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
-        self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] + 1)
-
-    def move_down(self) -> None:
-        """ Move the viewing window of the world to the down """
         self.top_corner = (self.top_corner[0], self.top_corner[1] - 1)
         self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] - 1)
 
-    def handle_command(self, command: str) -> None:
+    def move_down(self) -> None:
+        """ Move the viewing window of the world to the down """
+        self.top_corner = (self.top_corner[0], self.top_corner[1] + 1)
+        self.bottom_corner = (self.bottom_corner[0], self.bottom_corner[1] + 1)
+
+    def handle_command(self, command: int) -> None:
         """ Handle commands
             space: continue one generation
             w or up: move screen up
@@ -184,9 +184,9 @@ class Game:
         """
 
         if command == ord('w') or command == curses.KEY_UP:
-            self.move_down()
-        elif command == ord('s') or command == curses.KEY_DOWN:
             self.move_up()
+        elif command == ord('s') or command == curses.KEY_DOWN:
+            self.move_down()
         elif command == ord('a') or command == curses.KEY_LEFT:
             self.move_left()
         elif command == ord('d') or command == curses.KEY_RIGHT:

@@ -15,5 +15,6 @@ def main():
         game.handle_command(user_command)
         game.print_world()
 
+
 if __name__ == "__main__":
     main()

@@ -3,6 +3,7 @@
 # pylint: disable=no-self-use
 # pylint: disable=missing-docstring
 # pylint: disable=redefined-outer-name
+# pylint: disable=invalid-name
 
 from itertools import combinations
 import pytest  # type: ignore

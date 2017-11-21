@@ -1,5 +1,10 @@
 """ Tests for game of life """
 
+# pylint: disable=no-self-use
+# pylint: disable=missing-docstring
+# pylint: disable=redefined-outer-name
+# pylint: disable=invalid-name
+
 import pytest  # type: ignore
 
 from .context import game_of_life as gol
@@ -13,16 +18,13 @@ def curses_game():
 
 
 @pytest.fixture
-def screen_game():
+def game():
     return gol.ScreenGame(size_x=5, size_y=5, randomize=True)
 
 
 @pytest.fixture
 def empty_screen_game():
     return gol.ScreenGame(size_x=5, size_y=5, randomize=False)
-
-
-game = screen_game
 
 
 class TestGame:
@@ -45,15 +47,15 @@ class TestGame:
         old_top_corner = game.top_corner
         old_bottom_corner = game.bottom_corner
         game.move_up()
-        assert game.top_corner == (old_top_corner[0], old_top_corner[1] + 1)
-        assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] + 1)
+        assert game.top_corner == (old_top_corner[0], old_top_corner[1] - 1)
+        assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] - 1)
 
     def test_corners_moves_if_move_down(self, game):
         old_top_corner = game.top_corner
         old_bottom_corner = game.bottom_corner
         game.move_down()
-        assert game.top_corner == (old_top_corner[0], old_top_corner[1] - 1)
-        assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] - 1)
+        assert game.top_corner == (old_top_corner[0], old_top_corner[1] + 1)
+        assert game.bottom_corner == (old_bottom_corner[0], old_bottom_corner[1] + 1)
 
     def test_exit_raises_system_exit(self, game):
         with pytest.raises(SystemExit):
