@@ -223,8 +223,6 @@ class Game:
         self.kill()
         if msg:
             print(msg)
-        if not isinstance(status, int):
-            status = 0
         sys.exit(status)
 
     def kill(self) -> None:
