@@ -26,3 +26,7 @@ Session.vim
 # Coverage files
 #################
 htmlcov
+
+# Lock files #
+##############
+*.lock
