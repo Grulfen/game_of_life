@@ -12,6 +12,7 @@ pytest-mock = "*"
 pytest-cov = "*"
 mypy = "*"
 typing = "*"
+coveralls = "*"
 
 
 [dev-packages]
