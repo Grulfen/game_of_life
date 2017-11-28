@@ -2,9 +2,7 @@ language: python
 python:
     - "3.5"
 install: 
-    - "pip install -r requirements.txt"
-    - "pip install pytest-cov"
-    - "pip install coveralls"
-    - "pip install pytest-mock"
-script: pytest --cov-report= --cov=game_of_life tests/
+    - "pip install pipenv"
+    - "pipenv install"
+script: pipenv run "pytest --cov-report= --cov=game_of_life tests/"
 after_success: coveralls
